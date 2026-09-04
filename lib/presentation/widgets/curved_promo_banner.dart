@@ -1,9 +1,40 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-/// Banner quảng cáo gói tiết kiệm có góc bo cong nghệ thuật ("Bẻ cong ảnh dưới" & "Ghép ảnh chéo")
-/// khớp với thiết kế trong ảnh mẫu tham chiếu
-class CurvedPromoBanner extends StatelessWidget {
+/// Dữ liệu mẫu cho 4 banner quảng cáo tự động chạy từ phải sang trái
+class _PromoData {
+  final String badgeText;
+  final IconData badgeIcon;
+  final String title;
+  final String highlightValue;
+  final String highlightText;
+  final String buttonText;
+  final Color buttonTextColor;
+  final IconData rightIcon;
+  final List<Color> gradientColors;
+  final Color shadowColor;
+  final String route;
+
+  const _PromoData({
+    required this.badgeText,
+    required this.badgeIcon,
+    required this.title,
+    required this.highlightValue,
+    required this.highlightText,
+    required this.buttonText,
+    required this.buttonTextColor,
+    required this.rightIcon,
+    required this.gradientColors,
+    required this.shadowColor,
+    required this.route,
+  });
+}
+
+/// Banner quảng cáo có góc bo cong nghệ thuật ("Bẻ cong ảnh dưới" & "Ghép ảnh chéo")
+/// Tự động chạy 4 quảng cáo luân phiên từ phải sang trái với bố cục giữ nguyên tuyệt đối
+class CurvedPromoBanner extends StatefulWidget {
   final VoidCallback? onRegisterTap;
   final bool isDiagonalSlanted;
 
@@ -14,33 +45,203 @@ class CurvedPromoBanner extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    if (isDiagonalSlanted) {
-      return _buildDiagonalSlantedBanner(context);
+  State<CurvedPromoBanner> createState() => _CurvedPromoBannerState();
+}
+
+class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
+  late final PageController _pageController;
+  Timer? _autoScrollTimer;
+  int _currentPageIndex = 0;
+  static const int _virtualInitialPage = 4000;
+
+  static const List<_PromoData> _promos = [
+    // Quảng cáo 1: Gói Tiết Kiệm (Banner gốc chuẩn mẫu)
+    _PromoData(
+      badgeText: 'ƯU ĐÃI ĐẶC QUYỀN',
+      badgeIcon: Icons.bolt,
+      title: 'GÓI TIẾT KIỆM',
+      highlightValue: '100K',
+      highlightText: 'ƯU ĐÃI',
+      buttonText: 'ĐĂNG KÝ NGAY',
+      buttonTextColor: Color(0xFF0077B6),
+      rightIcon: CupertinoIcons.money_dollar_circle_fill,
+      gradientColors: [
+        Color(0xFF005C8A),
+        Color(0xFF0083B0),
+        Color(0xFF00B4DB),
+        Color(0xFF48CAE4),
+      ],
+      shadowColor: Color(0xFF0083B0),
+      route: '/bills',
+    ),
+
+    // Quảng cáo 2: Thẻ Tín Dụng SenBank Visa Platinum (Hoàn tiền)
+    _PromoData(
+      badgeText: 'HOÀN TIỀN CỰC ĐỈNH',
+      badgeIcon: Icons.stars_rounded,
+      title: 'THẺ SEN PLATINUM',
+      highlightValue: '50%',
+      highlightText: 'HOÀN TIỀN',
+      buttonText: 'MỞ THẺ NGAY',
+      buttonTextColor: Color(0xFF7B1FA2),
+      rightIcon: CupertinoIcons.creditcard_fill,
+      gradientColors: [
+        Color(0xFF4A0E4E),
+        Color(0xFF6A1B9A),
+        Color(0xFF8E24AA),
+        Color(0xFFAB47BC),
+      ],
+      shadowColor: Color(0xFF6A1B9A),
+      route: '/cards',
+    ),
+
+    // Quảng cáo 3: Vay Tiêu Dùng Siêu Tốc (0% lãi suất)
+    _PromoData(
+      badgeText: 'GIẢI NGÂN 15 PHÚT',
+      badgeIcon: Icons.flash_on_rounded,
+      title: 'VAY SIÊU TỐC',
+      highlightValue: '0%',
+      highlightText: 'LÃI THÁNG ĐẦU',
+      buttonText: 'NHẬN TIỀN NGAY',
+      buttonTextColor: Color(0xFF00695C),
+      rightIcon: CupertinoIcons.bolt_circle_fill,
+      gradientColors: [
+        Color(0xFF004D40),
+        Color(0xFF00695C),
+        Color(0xFF00897B),
+        Color(0xFF26A69A),
+      ],
+      shadowColor: Color(0xFF00695C),
+      route: '/transfer',
+    ),
+
+    // Quảng cáo 4: Bảo Hiểm Toàn Diện SenCare
+    _PromoData(
+      badgeText: 'BẢO VỆ TOÀN DIỆN',
+      badgeIcon: Icons.shield_rounded,
+      title: 'BẢO HIỂM SENCARE',
+      highlightValue: '1 TỶ',
+      highlightText: 'BẢO VỆ GIA ĐÌNH',
+      buttonText: 'KHÁM PHÁ NGAY',
+      buttonTextColor: Color(0xFF0077B6),
+      rightIcon: CupertinoIcons.shield_lefthalf_fill,
+      gradientColors: [
+        Color(0xFF0B192C),
+        Color(0xFF1E3E62),
+        Color(0xFF008DDA),
+        Color(0xFF41C9E2),
+      ],
+      shadowColor: Color(0xFF1E3E62),
+      route: '/promotions',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.isDiagonalSlanted) {
+      _pageController = PageController(initialPage: _virtualInitialPage);
+      _startAutoScroll();
     }
-    return _buildStandardBanner(context);
   }
 
-  Widget _buildStandardBanner(BuildContext context) {
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 3, milliseconds: 500), (timer) {
+      if (!mounted || !_pageController.hasClients) return;
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeInOutCubic,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoScrollTimer?.cancel();
+    if (!widget.isDiagonalSlanted) {
+      _pageController.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isDiagonalSlanted) {
+      return _buildDiagonalSlantedBanner(context);
+    }
+    return _buildAutoRunningBanner(context);
+  }
+
+  Widget _buildAutoRunningBanner(BuildContext context) {
+    return SizedBox(
+      height: 170,
+      child: Stack(
+        children: [
+          NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollStartNotification) {
+                _autoScrollTimer?.cancel();
+              } else if (notification is ScrollEndNotification) {
+                _startAutoScroll();
+              }
+              return false;
+            },
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPageIndex = index % _promos.length;
+                });
+              },
+              itemBuilder: (context, virtualIndex) {
+                final promo = _promos[virtualIndex % _promos.length];
+                return _buildSinglePromoCard(context, promo);
+              },
+            ),
+          ),
+
+          // 4 Chấm chỉ báo trang (Page Indicators) thanh lịch ở góc phải dưới
+          Positioned(
+            bottom: 12,
+            right: 22,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(_promos.length, (i) {
+                final isSelected = i == _currentPageIndex;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                  width: isSelected ? 16 : 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.white : Colors.white.withOpacity(0.38),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSinglePromoCard(BuildContext context, _PromoData promo) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(28),
       child: Container(
         height: 170,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFF005C8A),
-              Color(0xFF0083B0),
-              Color(0xFF00B4DB),
-              Color(0xFF48CAE4),
-            ],
+          gradient: LinearGradient(
+            colors: promo.gradientColors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0083B0).withOpacity(0.35),
+              color: promo.shadowColor.withOpacity(0.35),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -54,7 +255,6 @@ class CurvedPromoBanner extends StatelessWidget {
                 painter: _CurvedWaveBackgroundPainter(),
               ),
             ),
-
 
             // Các hạt lấp lánh & vòng tròn trang trí
             Positioned(
@@ -82,7 +282,7 @@ class CurvedPromoBanner extends StatelessWidget {
               ),
             ),
 
-            // Nội dung chính
+            // Nội dung chính (Giữ nguyên chính xác bố cục theo mẫu tham chiếu)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
@@ -104,14 +304,14 @@ class CurvedPromoBanner extends StatelessWidget {
                               width: 0.8,
                             ),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.bolt, color: Color(0xFFFFD54F), size: 14),
-                              SizedBox(width: 4),
+                              Icon(promo.badgeIcon, color: const Color(0xFFFFD54F), size: 14),
+                              const SizedBox(width: 4),
                               Text(
-                                'ƯU ĐÃI ĐẶC QUYỀN',
-                                style: TextStyle(
+                                promo.badgeText,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
@@ -123,9 +323,9 @@ class CurvedPromoBanner extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
 
-                        // Tiêu đề: GÓI TIẾT KIỆM (chữ trắng 3D)
+                        // Tiêu đề chữ trắng 3D
                         Text(
-                          'GÓI TIẾT KIỆM',
+                          promo.title,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -141,7 +341,7 @@ class CurvedPromoBanner extends StatelessWidget {
                           ),
                         ),
 
-                        // Dòng phụ: 100K ƯU ĐÃI (màu vàng rực rỡ nổi 3D)
+                        // Dòng phụ: Huy hiệu vàng nổi 3D
                         Row(
                           children: [
                             Container(
@@ -157,9 +357,9 @@ class CurvedPromoBanner extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              child: const Text(
-                                '100K',
-                                style: TextStyle(
+                              child: Text(
+                                promo.highlightValue,
+                                style: const TextStyle(
                                   color: Color(0xFF0F172A),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w900,
@@ -167,9 +367,9 @@ class CurvedPromoBanner extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Text(
-                              'ƯU ĐÃI',
-                              style: TextStyle(
+                            Text(
+                              promo.highlightText,
+                              style: const TextStyle(
                                 color: Color(0xFFFFEB3B),
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
@@ -187,9 +387,15 @@ class CurvedPromoBanner extends StatelessWidget {
 
                         const SizedBox(height: 12),
 
-                        // Nút ĐĂNG KÝ NGAY
+                        // Nút hành động (ĐĂNG KÝ NGAY, MỞ THẺ NGAY...)
                         InkWell(
-                          onTap: onRegisterTap,
+                          onTap: () {
+                            if (widget.onRegisterTap != null) {
+                              widget.onRegisterTap!();
+                            } else {
+                              context.push(promo.route);
+                            }
+                          },
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -204,23 +410,23 @@ class CurvedPromoBanner extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'ĐĂNG KÝ NGAY',
+                                  promo.buttonText,
                                   style: TextStyle(
-                                    color: Color(0xFF0077B6),
+                                    color: promo.buttonTextColor,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 0.3,
                                   ),
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Icon(
                                   CupertinoIcons.arrow_right,
                                   size: 12,
-                                  color: Color(0xFF0077B6),
+                                  color: promo.buttonTextColor,
                                 ),
                               ],
                             ),
@@ -230,7 +436,7 @@ class CurvedPromoBanner extends StatelessWidget {
                     ),
                   ),
 
-                  // Đồ họa icon 3D bên phải
+                  // Đồ họa icon 3D bên phải với vầng hào quang
                   Expanded(
                     flex: 4,
                     child: Stack(
@@ -250,7 +456,7 @@ class CurvedPromoBanner extends StatelessWidget {
                             ),
                           ),
                         ),
-                        // Biểu tượng heo tiết kiệm / tiền vàng
+                        // Biểu tượng 3D ngân hàng
                         Container(
                           width: 74,
                           height: 74,
@@ -262,10 +468,10 @@ class CurvedPromoBanner extends StatelessWidget {
                               width: 1.5,
                             ),
                           ),
-                          child: const Icon(
-                            CupertinoIcons.money_dollar_circle_fill,
+                          child: Icon(
+                            promo.rightIcon,
                             size: 46,
-                            color: Color(0xFFFFD54F),
+                            color: const Color(0xFFFFD54F),
                           ),
                         ),
                       ],
@@ -507,7 +713,7 @@ class CurvedPromoBanner extends StatelessWidget {
 
                     // Nút ĐĂNG KÝ NGAY
                     InkWell(
-                      onTap: onRegisterTap,
+                      onTap: widget.onRegisterTap,
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5.5),
