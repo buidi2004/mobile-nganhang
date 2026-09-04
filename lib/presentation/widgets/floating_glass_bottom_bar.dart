@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -23,9 +24,26 @@ class FourTileQuickActionIcon extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 4 ô vuông bo góc xếp 2x2 xoay nghiêng chéo 22 độ (Diagonal Orientation)
+          // Hiệu ứng ánh sáng tỏa tròn (Radial Glow) phía sau cụm icon
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF00E5FF).withOpacity(0.35),
+                    const Color(0xFF00B4D8).withOpacity(0.15),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.55, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // Khối 4 ô vuông xoay góc 22 độ
           Transform.rotate(
-            angle: 0.38, // Góc xoay nghiêng chéo ~22 độ như ảnh mẫu
+            angle: 0.384, // ~22 độ
             child: SizedBox(
               width: size,
               height: size,
@@ -35,41 +53,42 @@ class FourTileQuickActionIcon extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Top-Left: Cyan / Light Blue bóng 3D
+                      // 1. Ô TRÊN-TRÁI: Cyan phát sáng
                       _buildTile(
                         size: tileSize,
                         borderRadius: borderRadius,
-                        colors: const [Color(0xFF00E5FF), Color(0xFF00B4D8)],
-                        glowColor: const Color(0xFF00E5FF),
+                        colors: const [Color(0xFF2AF598), Color(0xFF009EFD)],
+                        shadowColor: const Color(0xFF00E5FF).withOpacity(0.60),
+                        hasSpecularHighlight: true,
                       ),
-                      const SizedBox(width: 3.5),
-                      // Top-Right: Royal Blue / Indigo bóng 3D
+                      const SizedBox(width: 3),
+                      // 2. Ô TRÊN-PHẢI: Royal Blue
                       _buildTile(
                         size: tileSize,
                         borderRadius: borderRadius,
-                        colors: const [Color(0xFF2979FF), Color(0xFF1D4ED8)],
-                        glowColor: const Color(0xFF2979FF),
+                        colors: const [Color(0xFF5B86E5), Color(0xFF363795)],
+                        shadowColor: const Color(0xFF5B86E5).withOpacity(0.50),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3.5),
+                  const SizedBox(height: 3),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Bottom-Left: Golden Amber / Orange bóng 3D
+                      // 3. Ô DƯỚI-TRÁI: Vàng cam Sunburst
                       _buildTile(
                         size: tileSize,
                         borderRadius: borderRadius,
-                        colors: const [Color(0xFFFFB300), Color(0xFFFF6D00)],
-                        glowColor: const Color(0xFFFF9100),
+                        colors: const [Color(0xFFFFB300), Color(0xFFFF6F00)],
+                        shadowColor: const Color(0xFFFF9800).withOpacity(0.55),
                       ),
-                      const SizedBox(width: 3.5),
-                      // Bottom-Right: Lime Green bóng 3D
+                      const SizedBox(width: 3),
+                      // 4. Ô DƯỚI-PHẢI: Xanh lá mạ Neon Green
                       _buildTile(
                         size: tileSize,
                         borderRadius: borderRadius,
-                        colors: const [Color(0xFF00E676), Color(0xFF00C853)],
-                        glowColor: const Color(0xFF00E676),
+                        colors: const [Color(0xFFB4EC51), Color(0xFF429321)],
+                        shadowColor: const Color(0xFF7ED321).withOpacity(0.50),
                       ),
                     ],
                   ),
@@ -78,24 +97,60 @@ class FourTileQuickActionIcon extends StatelessWidget {
             ),
           ),
 
-          // Ngôi sao lấp lánh (Sparkle 4-point star) ở góc trên bên trái
+          // Điểm sáng lóe 4 cánh lấp lánh (Sparkle Star) ở góc trên bên trái
           Positioned(
-            left: 0,
-            top: 0,
-            child: Icon(
-              Icons.auto_awesome,
-              size: size * 0.42,
-              color: Colors.white,
-              shadows: const [
-                Shadow(
-                  color: Colors.white,
-                  blurRadius: 8,
-                ),
-                Shadow(
-                  color: Color(0xFF00E5FF),
-                  blurRadius: 5,
+            top: 2,
+            left: 2,
+            child: _buildSparkle(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSparkle() {
+    return SizedBox(
+      width: 13,
+      height: 13,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 12,
+            height: 1.8,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.9),
+                  blurRadius: 4,
+                  spreadRadius: 1,
                 ),
               ],
+            ),
+          ),
+          Container(
+            width: 1.8,
+            height: 12,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.9),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
             ),
           ),
         ],
@@ -107,51 +162,135 @@ class FourTileQuickActionIcon extends StatelessWidget {
     required double size,
     required BorderRadius borderRadius,
     required List<Color> colors,
-    required Color glowColor,
+    required Color shadowColor,
+    bool hasSpecularHighlight = false,
   }) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
+        borderRadius: borderRadius,
         gradient: LinearGradient(
-          colors: colors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-        ),
-        borderRadius: borderRadius,
-        border: Border.all(
-          color: Colors.white.withOpacity(0.5),
-          width: 0.8,
+          colors: colors,
         ),
         boxShadow: [
           BoxShadow(
-            color: glowColor.withOpacity(0.50),
-            blurRadius: 6,
-            offset: const Offset(0, 1.5),
+            color: shadowColor,
+            blurRadius: 5,
+            offset: const Offset(0, 2.5),
           ),
         ],
+        border: Border.all(
+          color: Colors.white.withOpacity(0.35),
+          width: 0.8,
+        ),
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: borderRadius,
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.white.withOpacity(0.40),
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.55],
+      child: hasSpecularHighlight
+          ? Container(
+              decoration: BoxDecoration(
+                borderRadius: borderRadius,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.center,
+                  colors: [
+                    Colors.white.withOpacity(0.40),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.55],
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+}
+
+/// Widget chuyên trách CHỈ vẽ nền kính mờ (Layer 1: Background)
+/// Không chứa bất kỳ icon / text / nút bấm nào bên trong.
+/// Áp dụng đúng chuẩn kiến trúc phân tách 2 layer độc lập (SIBLING trong Stack):
+/// - Layer 1 (Nền kính): Xử lý khúc xạ quang học Snell's Law (LiquidGlass) / BackdropFilter blur,
+///   kèm viền vát quang học hairline siêu mảnh và bóng tiếp xúc vi mô nhẹ nhàng.
+/// - Layer 2 (Nội dung): Sibling nằm đè lên trên trong Stack, sắc nét 100%, không bị ảnh hưởng bởi filter.
+class GlassNavBackground extends StatelessWidget {
+  final double blurSigma;
+  final double borderRadius;
+  final double tintOpacity;
+  final bool isOval;
+  final double height;
+  final double? width;
+  final bool useBackdropFilter;
+
+  const GlassNavBackground({
+    super.key,
+    this.blurSigma = 24,
+    this.borderRadius = 33,
+    this.tintOpacity = 0.12,
+    this.isOval = false,
+    this.height = 66,
+    this.width,
+    this.useBackdropFilter = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (useBackdropFilter) {
+      // Widget này CHỈ vẽ nền kính mờ - không chứa icon/text/nút bên trong
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          child: Container(
+            width: width,
+            height: height,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(tintOpacity),
+              borderRadius: isOval ? null : BorderRadius.circular(borderRadius),
+              shape: isOval ? BoxShape.circle : BoxShape.rectangle,
+              border: Border.all(
+                color: Colors.white.withOpacity(0.4),
+                width: 0.8,
+              ),
+            ),
           ),
+        ),
+      );
+    }
+
+    // Mặc định: Nền kính quang học LiquidGlass (Snell's Law) + Viền vát siêu mảnh Hairline Rim (~0.8px)
+    return _DarkBevelGlassWrapper(
+      borderRadius: borderRadius,
+      isOval: isOval,
+      child: GlassContainer(
+        width: width,
+        height: height,
+        useOwnLayer: true,
+        quality: GlassQuality.premium,
+        shape: isOval
+            ? const LiquidOval()
+            : LiquidRoundedRectangle(borderRadius: borderRadius),
+        settings: const LiquidGlassSettings(
+          thickness: 48,
+          blur: 4.5,
+          glassColor: Color(0x14FFFFFF),
+          lightIntensity: 0.78,
+          refractiveIndex: 1.58,
+          chromaticAberration: 0.08,
+          ambientStrength: 0.16,
+          fresnelStrength: 1.30,
+          saturation: 1.35,
+          edgeAbsorption: 0.12,
+          shadowElevation: 0.0,
         ),
       ),
     );
   }
 }
 
-/// Thanh điều hướng nổi sử dụng [GlassContainer] chính thức từ thư viện `liquid_glass_widgets`
-/// Thiết kế 2 đảo kính (Dual Island) với viên thuốc active Cyan nhỏ gọn, tinh tế, vừa vặn
-/// tỷ lệ thẩm mỹ (không bị bè to hay chạm sát viền trên dưới).
+/// Thanh điều hướng nổi sử dụng kiến trúc 2 Layer Sibling trong Stack:
+/// - Layer 1: [GlassNavBackground] CHỈ vẽ nền kính mờ và viền vát quang học (không chứa nội dung)
+/// - Layer 2: Nội dung (4 tab icons, active cyan pill, 3D quick action button) nằm ĐÈ LÊN TRÊN, sắc nét 100%
 class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
@@ -176,8 +315,6 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
 
   @override
   Widget build(BuildContext context) {
-    // Ép cứng chất lượng GlassQuality.premium bằng GlassAdaptiveScope
-    // Ngăn chặn 100% bug benchmark tự động hạ cấp xuống standard sau vài giây đầu
     return GlassAdaptiveScope(
       minQuality: GlassQuality.premium,
       maxQuality: GlassQuality.premium,
@@ -187,84 +324,77 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
           height: 66,
           child: Row(
             children: [
-              // ĐẢO BÊN TRÁI: Thanh capsule kính chứa 4 tabs bằng GlassContainer chính thức
-              // bọc trong khung viền đen vát quang học (Dark Glass Bevel Rim)
+              // ĐẢO BÊN TRÁI: Thanh capsule kính chứa 4 tabs
+              // Ghép 2 layer SIBLING trong Stack: Nền riêng, Nội dung riêng
               Expanded(
-                child: _DarkBevelGlassWrapper(
-                  borderRadius: 33,
-                  child: GlassContainer(
-                    height: 66,
-                    useOwnLayer: true,
-                    quality: GlassQuality.premium,
-                    shape: const LiquidRoundedRectangle(borderRadius: 33),
-                    settings: const LiquidGlassSettings(
-                      thickness: 48,
-                      blur: 4.5,
-                      glassColor: Color(0x14FFFFFF),
-                      lightIntensity: 0.78,
-                      refractiveIndex: 1.58,
-                      chromaticAberration: 0.08,
-                      ambientStrength: 0.16,
-                      fresnelStrength: 1.30,
-                      saturation: 1.35,
-                      edgeAbsorption: 0.12,
-                      shadowElevation: 0.0,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Row(
-                        children: List.generate(_tabIcons.length, (index) {
-                          final isSelected = selectedIndex == index;
-                          return Expanded(
-                            child: _buildTabItem(
-                              icon: _tabIcons[index],
-                              isSelected: isSelected,
-                              onTap: () => onTabSelected(index),
-                            ),
-                          );
-                        }),
+                child: SizedBox(
+                  height: 66,
+                  child: Stack(
+                    children: [
+                      // Layer 1: NỀN kính mờ - CHỈ có blur + refraction + tint + hairline rim, không chứa gì khác
+                      const Positioned.fill(
+                        child: GlassNavBackground(
+                          borderRadius: 33,
+                          height: 66,
+                        ),
                       ),
-                    ),
+
+                      // Layer 2: NỘI DUNG - icon/text/active pill nằm ĐÈ LÊN TRÊN, sắc nét 100%
+                      Positioned.fill(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: Row(
+                            children: List.generate(_tabIcons.length, (index) {
+                              final isSelected = selectedIndex == index;
+                              return Expanded(
+                                child: _buildTabItem(
+                                  icon: _tabIcons[index],
+                                  isSelected: isSelected,
+                                  onTap: () => onTabSelected(index),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
 
               const SizedBox(width: 12),
 
-              // ĐẢO BÊN PHẢI: Nút tròn tiện ích nhanh bằng GlassContainer (LiquidOval)
-              // bọc trong khung viền đen vát quang học (Dark Glass Bevel Rim)
-              _DarkBevelGlassWrapper(
-                isOval: true,
-                borderRadius: 33,
-                child: GlassContainer(
-                  width: 66,
-                  height: 66,
-                  useOwnLayer: true,
-                  quality: GlassQuality.premium,
-                  shape: const LiquidOval(),
-                  settings: const LiquidGlassSettings(
-                    thickness: 48,
-                    blur: 4.5,
-                    glassColor: Color(0x16FFFFFF),
-                    lightIntensity: 0.80,
-                    refractiveIndex: 1.58,
-                    chromaticAberration: 0.08,
-                    ambientStrength: 0.16,
-                    fresnelStrength: 1.30,
-                    saturation: 1.35,
-                    edgeAbsorption: 0.12,
-                    shadowElevation: 0.0,
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: onQuickActionPressed,
-                      borderRadius: BorderRadius.circular(33),
-                      child: const Center(
-                        child: FourTileQuickActionIcon(size: 30),
+              // ĐẢO BÊN PHẢI: Nút tròn tiện ích nhanh
+              // Ghép 2 layer SIBLING trong Stack: Nền riêng, Nội dung riêng
+              SizedBox(
+                width: 66,
+                height: 66,
+                child: Stack(
+                  children: [
+                    // Layer 1: NỀN kính mờ tròn - CHỈ có blur + refraction + tint + hairline rim, không chứa gì khác
+                    const Positioned.fill(
+                      child: GlassNavBackground(
+                        isOval: true,
+                        borderRadius: 33,
+                        width: 66,
+                        height: 66,
                       ),
                     ),
-                  ),
+
+                    // Layer 2: NỘI DUNG - nút bấm tiện ích 4 ô vuông xoay 3D nằm ĐÈ LÊN TRÊN, sắc nét 100%
+                    Positioned.fill(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onQuickActionPressed,
+                          borderRadius: BorderRadius.circular(33),
+                          child: const Center(
+                            child: FourTileQuickActionIcon(size: 30),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
