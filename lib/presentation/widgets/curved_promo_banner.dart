@@ -145,6 +145,14 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
     }
   }
 
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (!widget.isDiagonalSlanted) {
+      _startAutoScroll();
+    }
+  }
+
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 3, milliseconds: 500), (timer) {
