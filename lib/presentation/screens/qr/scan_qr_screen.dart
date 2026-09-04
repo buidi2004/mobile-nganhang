@@ -59,7 +59,13 @@ class _ScanQRScreenState extends State<ScanQRScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        onPressed: () => context.pop(),
+                        onPressed: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
                         icon: const Icon(CupertinoIcons.clear_circled_solid, color: Colors.white, size: 32),
                       ),
                       Text(
@@ -87,13 +93,28 @@ class _ScanQRScreenState extends State<ScanQRScreen> {
                   height: 260,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: AppColors.primary, width: 3),
+                    border: Border.all(color: AppColors.bottomBarCyan, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.bottomBarGlow.withOpacity(0.40),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
                   child: Center(
                     child: Container(
                       width: 250,
                       height: 2,
-                      color: AppColors.primaryLight.withOpacity(0.8),
+                      decoration: const BoxDecoration(
+                        color: AppColors.bottomBarCyan,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.bottomBarGlow,
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

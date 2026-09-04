@@ -42,10 +42,11 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 0,
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 3,
+          shadowColor: AppColors.bottomBarGlow.withOpacity(0.45),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
         ),
       ),
     );
@@ -59,7 +60,7 @@ class AppTheme {
       primaryColor: AppColors.primary,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
-        secondary: AppColors.emeraldGreen,
+        secondary: AppColors.primaryLight,
         surface: AppColors.bgSurfaceDark,
         error: AppColors.error,
         onPrimary: Colors.white,
@@ -88,10 +89,11 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 0,
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 4,
+          shadowColor: AppColors.bottomBarGlow.withOpacity(0.45),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
         ),
       ),
     );

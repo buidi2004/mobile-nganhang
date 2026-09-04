@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Sen Hồng Brand Palette (Chuyển sang Tone Xanh Ngọc Lam / Cyan Oceanic)
-  static const Color primary = Color(0xFF0096C7);
+  // Sen Hồng Brand Palette (Đồng bộ chuẩn xác với màu xanh của nút BottomBar)
+  // Màu nút BottomBar: Cyan Ngọc Lam Color(0xFF26E5DC) & Oceanic Turquoise Color(0xFF00B4D8)
+  static const Color primary = Color(0xFF00B4D8);
   static const Color primaryDark = Color(0xFF0077B6);
-  static const Color primaryLight = Color(0xFF48CAE4);
+  static const Color primaryLight = Color(0xFF26E5DC);
   static const Color primaryAccent = Color(0xFF26E5DC);
+  static const Color bottomBarCyan = Color(0xFF26E5DC);
+  static const Color bottomBarOcean = Color(0xFF00B4D8);
+  static const Color bottomBarGlow = Color(0xFF00E5FF);
   static const Color accentGold = Color(0xFFFFB300);
 
   // Secondary & Accents
@@ -38,7 +42,7 @@ class AppColors {
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
-  static const Color info = Color(0xFF0096C7);
+  static const Color info = Color(0xFF00B4D8);
 
   // Text Colors (Light Mode)
   static const Color textPrimaryLight = Color(0xFF0F172A);
@@ -50,9 +54,15 @@ class AppColors {
   static const Color textSecondaryDark = Color(0xFF94A3B8);
   static const Color textMutedDark = Color(0xFF64748B);
 
-  // Gradients
+  // Gradients chuẩn sắc màu nút BottomBar
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF26E5DC), Color(0xFF0096C7)],
+    colors: [Color(0xFF26E5DC), Color(0xFF00B4D8)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient bottomBarGradient = LinearGradient(
+    colors: [Color(0xFF26E5DC), Color(0xFF00B4D8)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

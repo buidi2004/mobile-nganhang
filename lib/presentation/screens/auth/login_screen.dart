@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 
@@ -22,21 +22,42 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.bgDark,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              if (Navigator.of(context).canPop())
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.centerLeft,
+                  icon: const Icon(Iconsax.arrow_left_2, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                )
+              else
+                const SizedBox(height: 16),
               Center(
                 child: Container(
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.2),
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.bottomBarCyan.withOpacity(0.25),
+                        AppColors.bottomBarOcean.withOpacity(0.15),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primary, width: 2),
+                    border: Border.all(color: AppColors.bottomBarCyan, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.bottomBarGlow.withOpacity(0.35),
+                        blurRadius: 16,
+                      ),
+                    ],
                   ),
-                  child: const Icon(CupertinoIcons.shield_lefthalf_fill, color: AppColors.primary, size: 36),
+                  child: const Icon(Iconsax.shield_security, color: AppColors.bottomBarCyan, size: 36),
                 ),
               ),
               const SizedBox(height: 16),
@@ -61,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: 'Số điện thoại',
                   labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-                  prefixIcon: const Icon(CupertinoIcons.phone, color: AppColors.primary),
+                  prefixIcon: const Icon(Iconsax.call, color: AppColors.primary),
                   filled: true,
                   fillColor: AppColors.cardDark,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -77,9 +98,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: 'Mật khẩu',
                   labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-                  prefixIcon: const Icon(CupertinoIcons.lock, color: AppColors.primary),
+                  prefixIcon: const Icon(Iconsax.lock_1, color: AppColors.primary),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword ? CupertinoIcons.eye_slash : CupertinoIcons.eye, color: AppColors.textSecondaryDark),
+                    icon: Icon(_obscurePassword ? Iconsax.eye_slash : Iconsax.eye, color: AppColors.textSecondaryDark),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   filled: true,
@@ -92,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () => context.push('/auth/forgot-password'),
                   child: const Text('Quên mật khẩu?', style: TextStyle(color: AppColors.primaryLight)),
                 ),
               ),
@@ -110,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: IconButton(
                   onPressed: () => context.go('/'),
                   iconSize: 52,
-                  icon: const Icon(CupertinoIcons.viewfinder, color: AppColors.emeraldGreen),
+                  icon: const Icon(Iconsax.finger_scan, color: AppColors.emeraldGreen),
                   tooltip: 'Đăng nhập sinh trắc học FaceID / Vân tay',
                 ),
               ),

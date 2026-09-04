@@ -30,10 +30,16 @@ class _ConfirmTransferScreenState extends State<ConfirmTransferScreen> {
   void _onPinEntered(String val) {
     setState(() => _pin = val);
     if (val.length == 6) {
-      // Giả lập xác thực ký mã PIN thành công
-      context.go(
-        '/transfer/result?recipient=${widget.recipient}&amount=${widget.amount}&note=${widget.note}',
-      );
+      if (widget.amount >= 5000000) {
+        // Giao dịch giá trị lớn: Xác thực 2FA OTP theo Quyết định 2345/NHNN
+        context.push(
+          '/transfer/2fa-otp?recipient=${widget.recipient}&amount=${widget.amount}&note=${widget.note}',
+        );
+      } else {
+        context.go(
+          '/transfer/result?recipient=${widget.recipient}&amount=${widget.amount}&note=${widget.note}',
+        );
+      }
     }
   }
 
@@ -115,9 +121,15 @@ class _ConfirmTransferScreenState extends State<ConfirmTransferScreen> {
                   onPinChanged: _onPinEntered,
                   onBiometricPressed: () {
                     // FaceID ký giao dịch thành công
-                    context.go(
-                      '/transfer/result?recipient=${widget.recipient}&amount=${widget.amount}&note=${widget.note}',
-                    );
+                    if (widget.amount >= 5000000) {
+                      context.push(
+                        '/transfer/2fa-otp?recipient=${widget.recipient}&amount=${widget.amount}&note=${widget.note}',
+                      );
+                    } else {
+                      context.go(
+                        '/transfer/result?recipient=${widget.recipient}&amount=${widget.amount}&note=${widget.note}',
+                      );
+                    }
                   },
                 ),
               ],

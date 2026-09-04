@@ -35,6 +35,12 @@ class AppTypography {
         color: color,
       );
 
+  static TextStyle titleSmall({Color? color}) => GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: color,
+      );
+
   static TextStyle bodyLarge({Color? color}) => GoogleFonts.inter(
         fontSize: 15,
         fontWeight: FontWeight.normal,

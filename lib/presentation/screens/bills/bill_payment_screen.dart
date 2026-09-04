@@ -47,7 +47,11 @@ class BillPaymentScreen extends StatelessWidget {
                     quality: GlassQuality.minimal,
                     child: InkWell(
                       onTap: () {
-                        _showLookupBottomSheet(context, cat['label'] as String);
+                        if (cat['label'] == 'Nạp ĐT') {
+                          context.push('/bills/phone-recharge');
+                        } else {
+                          context.push('/bills/input?service=${cat['label']}');
+                        }
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: Padding(
@@ -88,48 +92,4 @@ class BillPaymentScreen extends StatelessWidget {
     crossAxisSpacing: 14,
     childAspectRatio: 1.25,
   );
-
-  void _showLookupBottomSheet(BuildContext context, String serviceName) {
-    final codeCtrl = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.cardDark,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Tra cứu hóa đơn: $serviceName', style: AppTypography.titleLarge(color: AppColors.textPrimaryDark)),
-              const SizedBox(height: 16),
-              TextField(
-                controller: codeCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Mã khách hàng / Mã danh bộ',
-                  prefixIcon: const Icon(CupertinoIcons.barcode, color: AppColors.primary),
-                  filled: true,
-                  fillColor: const Color(0xFF1E293B),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  context.push('/transfer/confirm?recipient=$serviceName (${codeCtrl.text})&amount=350000&note=Thanh toan $serviceName');
-                },
-                child: const Text('Tra cứu cước & Thanh toán'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }

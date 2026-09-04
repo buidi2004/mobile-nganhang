@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 
@@ -39,7 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Số điện thoại nhận OTP',
-                  prefixIcon: const Icon(CupertinoIcons.phone, color: AppColors.primary),
+                  prefixIcon: const Icon(Iconsax.call, color: AppColors.primary),
                   filled: true,
                   fillColor: AppColors.cardDark,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -53,7 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Họ và tên (như trên CCCD)',
-                  prefixIcon: const Icon(CupertinoIcons.person, color: AppColors.primary),
+                  prefixIcon: const Icon(Iconsax.user, color: AppColors.primary),
                   filled: true,
                   fillColor: AppColors.cardDark,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -67,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Mật khẩu (tối thiểu 6 ký tự)',
-                  prefixIcon: const Icon(CupertinoIcons.lock, color: AppColors.primary),
+                  prefixIcon: const Icon(Iconsax.lock_1, color: AppColors.primary),
                   filled: true,
                   fillColor: AppColors.cardDark,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -83,7 +83,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onChanged: (v) => setState(() => _agreeTerms = v ?? true),
                   ),
                   Expanded(
-                    child: Text('Tôi đồng ý với Điều khoản sử dụng & Chính sách bảo mật Sen Hồng', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
+                    child: InkWell(
+                      onTap: () => context.push('/auth/terms'),
+                      child: Text('Tôi đồng ý với Điều khoản sử dụng & Chính sách bảo mật Sen Hồng', style: AppTypography.bodySmall(color: AppColors.primaryLight)),
+                    ),
                   ),
                 ],
               ),

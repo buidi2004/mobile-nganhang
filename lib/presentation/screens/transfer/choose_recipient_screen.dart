@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
@@ -47,8 +47,17 @@ class _ChooseRecipientScreenState extends State<ChooseRecipientScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: _selectedTab == 0 ? AppColors.primary : Colors.transparent,
+                            gradient: _selectedTab == 0 ? AppColors.primaryGradient : null,
                             borderRadius: BorderRadius.circular(10),
+                            boxShadow: _selectedTab == 0
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.bottomBarGlow.withOpacity(0.35),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ]
+                                : null,
                           ),
                           child: Text(
                             'Ví tới Ví (Nội bộ)',
@@ -67,8 +76,17 @@ class _ChooseRecipientScreenState extends State<ChooseRecipientScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: _selectedTab == 1 ? AppColors.primary : Colors.transparent,
+                            gradient: _selectedTab == 1 ? AppColors.primaryGradient : null,
                             borderRadius: BorderRadius.circular(10),
+                            boxShadow: _selectedTab == 1
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.bottomBarGlow.withOpacity(0.35),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ]
+                                : null,
                           ),
                           child: Text(
                             'Liên ngân hàng (Napas)',
@@ -95,9 +113,9 @@ class _ChooseRecipientScreenState extends State<ChooseRecipientScreen> {
                 decoration: InputDecoration(
                   hintText: _selectedTab == 0 ? 'Nhập SĐT hoặc Mã ví Sen Hồng' : 'Nhập số tài khoản ngân hàng',
                   hintStyle: const TextStyle(color: AppColors.textMutedDark),
-                  prefixIcon: const Icon(CupertinoIcons.search, color: AppColors.primary),
+                  prefixIcon: const Icon(Iconsax.search_normal_1, color: AppColors.primary),
                   suffixIcon: IconButton(
-                    icon: const Icon(CupertinoIcons.qrcode, color: AppColors.primaryLight),
+                    icon: const Icon(Iconsax.scan_barcode, color: AppColors.primaryLight),
                     onPressed: () => context.push('/scan-qr'),
                   ),
                   filled: true,
@@ -112,7 +130,82 @@ class _ChooseRecipientScreenState extends State<ChooseRecipientScreen> {
               ),
             ),
 
-            const SizedBox(height: 12),
+            // Quick Actions: Danh bạ, Yêu cầu chia tiền, QR của tôi
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => context.push('/beneficiaries'),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.cardBorderDark),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Iconsax.profile_2user_copy, size: 16, color: AppColors.primaryLight),
+                            SizedBox(width: 6),
+                            Text('Danh bạ lưu', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => context.push('/transfer/request'),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.cardBorderDark),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Iconsax.people_copy, size: 16, color: AppColors.accentGold),
+                            SizedBox(width: 6),
+                            Text('Chia tiền nhóm', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  InkWell(
+                    onTap: () => context.push('/my-qr'),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardDark,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.cardBorderDark),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Iconsax.scan_barcode, size: 16, color: AppColors.vividTeal),
+                          SizedBox(width: 4),
+                          Text('Mã QR', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Align(
@@ -141,7 +234,7 @@ class _ChooseRecipientScreenState extends State<ChooseRecipientScreen> {
                         ),
                         title: Text(b['name']!, style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                         subtitle: Text('${b['bank']} • ${b['account']}', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
-                        trailing: const Icon(CupertinoIcons.chevron_forward, color: AppColors.textMutedDark, size: 16),
+                        trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
                       ),
                     ),
                   );

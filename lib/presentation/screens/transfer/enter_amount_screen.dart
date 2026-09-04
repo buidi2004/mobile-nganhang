@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
@@ -50,7 +50,7 @@ class _EnterAmountScreenState extends State<EnterAmountScreen> {
                     children: [
                       CircleAvatar(
                         backgroundColor: AppColors.primary.withOpacity(0.2),
-                        child: const Icon(CupertinoIcons.person_fill, color: AppColors.primary),
+                        child: const Icon(Iconsax.profile_circle_copy, color: AppColors.primary),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -125,7 +125,7 @@ class _EnterAmountScreenState extends State<EnterAmountScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Lời nhắn / Nội dung chuyển tiền',
-                  prefixIcon: const Icon(CupertinoIcons.chat_bubble_text, color: AppColors.primary),
+                  prefixIcon: const Icon(Iconsax.message_text, color: AppColors.primary),
                   filled: true,
                   fillColor: AppColors.cardDark,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),

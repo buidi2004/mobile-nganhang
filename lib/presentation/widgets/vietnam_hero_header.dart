@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
@@ -168,6 +169,30 @@ class VietnamHeroHeader extends StatelessWidget {
                               ],
                             ),
                           ],
+                        ),
+                      ),
+
+                      // Nút tìm kiếm toàn cục
+                      Container(
+                        width: 40,
+                        height: 40,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.black.withOpacity(0.25),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () => context.push('/search'),
+                          icon: const Icon(
+                            CupertinoIcons.search,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
 
@@ -437,12 +462,96 @@ class VietnamHeroHeader extends StatelessWidget {
                       ),
                     ],
                   ),
+
+                  const SizedBox(height: 14),
+
+                  // HÀNG 5: 4 NÚT HÀNH ĐỘNG NHANH (NẠP, RÚT, CHUYỂN, QUÉT QR)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildHeaderQuickBtn(
+                        context: context,
+                        icon: CupertinoIcons.paperplane_fill,
+                        label: 'Chuyển tiền',
+                        onTap: onTransfer ?? () => context.push('/transfer'),
+                      ),
+                      _buildHeaderQuickBtn(
+                        context: context,
+                        icon: CupertinoIcons.arrow_down_circle_fill,
+                        label: 'Nạp tiền',
+                        onTap: onDeposit ?? () => context.push('/deposit'),
+                      ),
+                      _buildHeaderQuickBtn(
+                        context: context,
+                        icon: CupertinoIcons.arrow_up_circle_fill,
+                        label: 'Rút tiền',
+                        onTap: onWithdraw ?? () => context.push('/withdraw'),
+                      ),
+                      _buildHeaderQuickBtn(
+                        context: context,
+                        icon: CupertinoIcons.qrcode_viewfinder,
+                        label: 'Mã QR',
+                        onTap: onQr ?? () => context.push('/scan-qr'),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ],
         ),
       );
+  }
+
+  Widget _buildHeaderQuickBtn({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Column(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.18),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.35),
+                  width: 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                shadows: const [
+                  Shadow(color: Colors.black87, blurRadius: 4),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

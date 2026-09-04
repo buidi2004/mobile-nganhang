@@ -72,7 +72,7 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
         Color(0xFF48CAE4),
       ],
       shadowColor: Color(0xFF0083B0),
-      route: '/bills',
+      route: '/bills/savings',
     ),
 
     // Quảng cáo 2: Thẻ Tín Dụng SenBank Visa Platinum (Hoàn tiền)
@@ -112,7 +112,7 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
         Color(0xFF26A69A),
       ],
       shadowColor: Color(0xFF00695C),
-      route: '/transfer',
+      route: '/bills/quick-loan',
     ),
 
     // Quảng cáo 4: Bảo Hiểm Toàn Diện SenCare

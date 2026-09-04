@@ -6,6 +6,7 @@ import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
 import 'package:sen_hong_bank/presentation/widgets/curved_promo_banner.dart';
 import 'package:sen_hong_bank/presentation/widgets/vietnam_hero_header.dart';
+import 'package:sen_hong_bank/presentation/widgets/side_menu_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,16 +16,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _hideBalance = false;
   final double _balance = 12580000;
 
   final List<Map<String, dynamic>> _quickServices = [
     {'icon': CupertinoIcons.paperplane_fill, 'label': 'Chuyển tiền', 'color': AppColors.primary, 'route': '/transfer'},
-    {'icon': CupertinoIcons.device_phone_portrait, 'label': 'Nạp ĐT', 'color': AppColors.emeraldGreen, 'route': '/bills'},
-    {'icon': CupertinoIcons.bolt_fill, 'label': 'Điện nước', 'color': AppColors.accentGold, 'route': '/bills'},
-    {'icon': CupertinoIcons.money_dollar_circle_fill, 'label': 'Tiết kiệm', 'color': AppColors.vividTeal, 'route': '/bills'},
-    {'icon': CupertinoIcons.chart_bar_alt_fill, 'label': 'Vay nhanh', 'color': AppColors.softPurple, 'route': '/bills'},
-    {'icon': CupertinoIcons.ticket_fill, 'label': 'Vietlott', 'color': Colors.redAccent, 'route': '/bills'},
+    {'icon': CupertinoIcons.device_phone_portrait, 'label': 'Nạp ĐT', 'color': AppColors.emeraldGreen, 'route': '/bills/phone-recharge'},
+    {'icon': CupertinoIcons.bolt_fill, 'label': 'Điện nước', 'color': AppColors.accentGold, 'route': '/bills/input?service=Điện nước'},
+    {'icon': CupertinoIcons.money_dollar_circle_fill, 'label': 'Tiết kiệm', 'color': AppColors.vividTeal, 'route': '/bills/savings'},
+    {'icon': CupertinoIcons.chart_bar_alt_fill, 'label': 'Vay nhanh', 'color': AppColors.softPurple, 'route': '/bills/quick-loan'},
+    {'icon': CupertinoIcons.ticket_fill, 'label': 'Vietlott', 'color': Colors.redAccent, 'route': '/bills/lottery'},
     {'icon': CupertinoIcons.creditcard_fill, 'label': 'Quản lý thẻ', 'color': Colors.blueAccent, 'route': '/cards'},
     {'icon': CupertinoIcons.ellipsis, 'label': 'Xem thêm', 'color': Colors.grey, 'route': '/more'},
   ];
@@ -56,6 +58,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: const SideMenuDrawer(),
       backgroundColor: Colors.transparent,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
@@ -66,8 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
               balance: _balance,
               isHidden: _hideBalance,
               onToggleVisibility: () => setState(() => _hideBalance = !_hideBalance),
-              onNotificationTap: () => context.push('/history'),
-              onProfileTap: () {},
+              onNotificationTap: () => context.push('/notifications'),
+              onProfileTap: () => _scaffoldKey.currentState?.openDrawer(),
             ),
           ),
 
@@ -189,6 +193,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         child: ListTile(
+                          onTap: () {
+                            context.push(
+                              '/history/detail?title=${tx['title']}&amount=${tx['amount']}&time=${tx['time']}&note=${tx['desc']}',
+                            );
+                          },
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                           leading: CircleAvatar(
                             backgroundColor: isPositive

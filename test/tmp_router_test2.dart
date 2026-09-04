@@ -1,0 +1,1 @@
+﻿import 'package:flutter_test/flutter_test.dart'; import 'package:sen_hong_bank/presentation/routes/app_router.dart'; void main() { test('check route', () { expect(appRouter.configuration.routes.any((r) => r.toString().contains('/profile')), true); }); }

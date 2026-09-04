@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
@@ -78,7 +79,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 const SnackBar(content: Text('Đang xuất file sao kê Excel/PDF...')),
               );
             },
-            icon: const Icon(CupertinoIcons.arrow_down_doc, color: AppColors.primary),
+            icon: const Icon(Iconsax.document_download, color: AppColors.primary),
             tooltip: 'Xuất sao kê',
           ),
         ],
@@ -104,7 +105,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         color: isSelected ? Colors.white : AppColors.textPrimaryLight,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
-                      side: BorderSide(color: Colors.white.withOpacity(0.6)),
+                      side: BorderSide(
+                        color: isSelected ? AppColors.bottomBarCyan : Colors.white.withOpacity(0.6),
+                        width: isSelected ? 1.5 : 1.0,
+                      ),
+                      shadowColor: AppColors.bottomBarGlow.withOpacity(0.4),
+                      elevation: isSelected ? 3 : 0,
                       onSelected: (_) => setState(() => _selectedFilter = idx),
                     ),
                   );
@@ -127,14 +133,18 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     child: GlassCard(
                       quality: GlassQuality.minimal, // Minimal: tối ưu 0 chi phí shader khi cuộn mượt mà
                       child: ListTile(
-                        onTap: () {},
+                        onTap: () {
+                          context.push(
+                            '/history/detail?id=${tx['id']}&title=${tx['title']}&amount=${tx['amount']}&time=${tx['date']}&note=${tx['desc']}',
+                          );
+                        },
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         leading: CircleAvatar(
                           backgroundColor: isPositive
                               ? AppColors.emeraldGreen.withOpacity(0.15)
                               : AppColors.primary.withOpacity(0.15),
                           child: Icon(
-                            isPositive ? CupertinoIcons.arrow_down_left : CupertinoIcons.arrow_up_right,
+                            isPositive ? Iconsax.money_recive : Iconsax.money_send,
                             color: isPositive ? AppColors.emeraldGreen : AppColors.primary,
                             size: 20,
                           ),

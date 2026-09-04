@@ -1,5 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 
@@ -84,13 +84,13 @@ class CustomPinNumpad extends StatelessWidget {
                 children: [
                   showBiometric
                       ? _buildSpecialButton(
-                          icon: CupertinoIcons.viewfinder,
+                          icon: Iconsax.finger_scan,
                           onPressed: onBiometricPressed,
                         )
                       : const SizedBox(width: 72, height: 72),
                   _buildNumberButton('0'),
                   _buildSpecialButton(
-                    icon: CupertinoIcons.delete_left_fill,
+                    icon: Iconsax.arrow_left_2,
                     onPressed: _onBackspace,
                   ),
                 ],

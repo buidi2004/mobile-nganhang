@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
@@ -23,8 +25,8 @@ class _CardsScreenState extends State<CardsScreen> {
         title: const Text('Thẻ Sen Hồng'),
         actions: [
           IconButton(
-            onPressed: () {},
-            icon: const Icon(CupertinoIcons.plus_circle_fill, color: AppColors.primary),
+            onPressed: () => context.push('/payment-methods'),
+            icon: const Icon(Iconsax.card_add, color: AppColors.primary),
           ),
         ],
       ),
@@ -45,11 +47,20 @@ class _CardsScreenState extends State<CardsScreen> {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.bottomBarCyan.withOpacity(0.35), width: 1.2),
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFE91E63), Color(0xFF880E4F), Color(0xFF1A1A2E)],
+                      colors: [Color(0xFF032B43), Color(0xFF005F73), Color(0xFF0096C7), Color(0xFF26E5DC)],
+                      stops: [0.0, 0.35, 0.75, 1.0],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.bottomBarGlow.withOpacity(0.25),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +100,7 @@ class _CardsScreenState extends State<CardsScreen> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Center(
-                              child: Icon(CupertinoIcons.creditcard, color: Colors.black54, size: 20),
+                              child: Icon(Iconsax.card, color: Colors.black54, size: 20),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -136,7 +147,7 @@ class _CardsScreenState extends State<CardsScreen> {
               const SizedBox(height: 12),
 
               _buildCardOption(
-                icon: _showDetails ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye_fill,
+                icon: _showDetails ? Iconsax.eye_slash : Iconsax.eye,
                 title: 'Xem thông tin thẻ & CVV',
                 subtitle: 'Hiển thị đầy đủ số thẻ và ngày hết hạn',
                 trailing: Switch.adaptive(
@@ -147,7 +158,7 @@ class _CardsScreenState extends State<CardsScreen> {
               ),
 
               _buildCardOption(
-                icon: _isLocked ? CupertinoIcons.lock_open_fill : CupertinoIcons.lock_fill,
+                icon: _isLocked ? Iconsax.unlock : Iconsax.lock_1,
                 title: _isLocked ? 'Mở khóa thẻ' : 'Khóa thẻ tạm thời',
                 subtitle: _isLocked ? 'Thẻ đang bị khóa giao dịch' : 'Bảo vệ thẻ khi nghi ngờ lộ thông tin',
                 trailing: Switch.adaptive(
@@ -158,17 +169,31 @@ class _CardsScreenState extends State<CardsScreen> {
               ),
 
               _buildCardOption(
-                icon: CupertinoIcons.lock_shield_fill,
+                icon: Iconsax.shield_security,
                 title: 'Đổi mã PIN thẻ',
                 subtitle: 'Thay đổi PIN rút tiền tại cây ATM',
-                onTap: () {},
+                onTap: () => context.push('/auth/set-pin'),
               ),
 
               _buildCardOption(
-                icon: CupertinoIcons.slider_horizontal_3,
+                icon: Iconsax.setting_4,
                 title: 'Cài đặt hạn mức thanh toán',
                 subtitle: 'Hạn mức chi tiêu trực tuyến mỗi ngày',
-                onTap: () {},
+                onTap: () => context.push('/profile/kyc-level'),
+              ),
+
+              _buildCardOption(
+                icon: Iconsax.cards,
+                title: 'Nguồn tiền & Phương thức thanh toán',
+                subtitle: 'Liên kết thẻ Visa, Mastercard, JCB quốc tế',
+                onTap: () => context.push('/payment-methods'),
+              ),
+
+              _buildCardOption(
+                icon: Iconsax.bank,
+                title: 'Tài khoản ngân hàng nội địa',
+                subtitle: 'Quản lý tài khoản ngân hàng liên kết',
+                onTap: () => context.push('/bank-cards'),
               ),
             ],
           ),
@@ -202,7 +227,7 @@ class _CardsScreenState extends State<CardsScreen> {
           ),
           title: Text(title, style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
           subtitle: Text(subtitle, style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
-          trailing: trailing ?? const Icon(CupertinoIcons.chevron_forward, size: 18, color: AppColors.textMutedDark),
+          trailing: trailing ?? const Icon(Iconsax.arrow_right_3, size: 18, color: AppColors.textMutedDark),
         ),
       ),
     );

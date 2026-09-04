@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
@@ -40,7 +40,7 @@ class TransferResultScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.emeraldGreen, width: 2),
                 ),
-                child: const Icon(CupertinoIcons.checkmark_alt, color: AppColors.emeraldGreen, size: 48),
+                child: const Icon(Iconsax.tick_circle, color: AppColors.emeraldGreen, size: 48),
               ),
               const SizedBox(height: 16),
 
@@ -88,7 +88,7 @@ class TransferResultScreen extends StatelessWidget {
                           const SnackBar(content: Text('Đang tải biên lai PDF...')),
                         );
                       },
-                      icon: const Icon(CupertinoIcons.doc_text_fill, size: 18),
+                      icon: const Icon(Iconsax.document_download, size: 18),
                       label: const Text('Tải biên lai PDF'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
@@ -101,7 +101,7 @@ class TransferResultScreen extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {},
-                      icon: const Icon(CupertinoIcons.share, size: 18),
+                      icon: const Icon(Iconsax.share, size: 18),
                       label: const Text('Chia sẻ ảnh'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
@@ -113,11 +113,24 @@ class TransferResultScreen extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: () => context.go('/'),
-                child: const Text('Về màn hình chính'),
+                icon: const Icon(Iconsax.home_2, size: 18),
+                label: const Text('Về màn hình chính'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => context.pushReplacement('/transfer'),
+                icon: const Icon(Iconsax.repeat, size: 18),
+                label: const Text('Thực hiện giao dịch mới'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  foregroundColor: AppColors.primaryLight,
+                  side: const BorderSide(color: AppColors.primary, width: 1.2),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
               ),
             ],
           ),
