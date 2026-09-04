@@ -6,6 +6,7 @@ import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
 import 'package:sen_hong_bank/presentation/widgets/balance_card.dart';
 import 'package:sen_hong_bank/presentation/widgets/curved_promo_banner.dart';
+import 'package:sen_hong_bank/presentation/widgets/vietnam_hero_header.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,73 +58,74 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Sliver Header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: AppColors.primary.withOpacity(0.12),
-                          child: const Icon(CupertinoIcons.person_fill, color: AppColors.primary),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // 1. Header Lễ Hội SenBank (Banner đỏ tòa nhà SenBank + Điểm giao thoa quang học + Search Bar + 2 Thẻ Tiết kiệm/Thẻ SenBank)
+          SliverToBoxAdapter(
+            child: VietnamHeroHeader(
+              onSearchTap: () => context.push('/history'),
+              onSavingsTap: () => context.push('/bills'),
+              onCardsTap: () => context.push('/cards'),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+          // 2. Greeting bar
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: AppColors.primary.withOpacity(0.12),
+                        child: const Icon(CupertinoIcons.person_fill, color: AppColors.primary, size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Xin chào,',
+                            style: AppTypography.bodySmall(color: AppColors.textSecondaryLight),
+                          ),
+                          Text(
+                            'BÙI ĐỨC VƯƠNG',
+                            style: AppTypography.titleMedium(color: AppColors.textPrimaryLight),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Stack(
+                    children: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(CupertinoIcons.bell_fill, color: AppColors.textPrimaryLight, size: 22),
+                      ),
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          width: 9,
+                          height: 9,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Xin chào,',
-                              style: AppTypography.bodySmall(color: AppColors.textSecondaryLight),
-                            ),
-                            Text(
-                              'BÙI ĐỨC VƯƠNG',
-                              style: AppTypography.titleMedium(color: AppColors.textPrimaryLight),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => context.push('/history'),
-                          icon: const Icon(CupertinoIcons.search, color: AppColors.textPrimaryLight),
-                        ),
-                        Stack(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(CupertinoIcons.bell_fill, color: AppColors.textPrimaryLight),
-                            ),
-                            Positioned(
-                              right: 8,
-                              top: 8,
-                              child: Container(
-                                width: 9,
-                                height: 9,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
+          ),
 
             // Balance Card Section
             SliverToBoxAdapter(
@@ -310,7 +312,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 }
