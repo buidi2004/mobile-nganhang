@@ -12,7 +12,7 @@ void main() async {
   runApp(
     LiquidGlassWidgets.wrap(
       brightnessResolver: Theme.maybeBrightnessOf,
-      adaptiveQuality: true, // Tự động benchmark thiết bị và hạ quality khi máy yếu/nóng
+      adaptiveQuality: false, // TẮT benchmark tự động hạ cấp: Giữ cố định GlassQuality.premium vĩnh viễn
       theme: AppTheme.glassTheme,
       child: const SenHongApp(),
     ),

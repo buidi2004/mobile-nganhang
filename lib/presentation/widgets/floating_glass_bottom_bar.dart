@@ -176,91 +176,99 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-      child: SizedBox(
-        height: 66,
-        child: Row(
-          children: [
-            // ĐẢO BÊN TRÁI: Thanh capsule kính chứa 4 tabs bằng GlassContainer chính thức
-            // bọc trong khung viền đen vát quang học (Dark Glass Bevel Rim)
-            Expanded(
-              child: _DarkBevelGlassWrapper(
+    // Ép cứng chất lượng GlassQuality.premium bằng GlassAdaptiveScope
+    // Ngăn chặn 100% bug benchmark tự động hạ cấp xuống standard sau vài giây đầu
+    return GlassAdaptiveScope(
+      minQuality: GlassQuality.premium,
+      maxQuality: GlassQuality.premium,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+        child: SizedBox(
+          height: 66,
+          child: Row(
+            children: [
+              // ĐẢO BÊN TRÁI: Thanh capsule kính chứa 4 tabs bằng GlassContainer chính thức
+              // bọc trong khung viền đen vát quang học (Dark Glass Bevel Rim)
+              Expanded(
+                child: _DarkBevelGlassWrapper(
+                  borderRadius: 33,
+                  child: GlassContainer(
+                    height: 66,
+                    useOwnLayer: true,
+                    quality: GlassQuality.premium,
+                    shape: const LiquidRoundedRectangle(borderRadius: 33),
+                    settings: const LiquidGlassSettings(
+                      thickness: 48,
+                      blur: 4.5,
+                      glassColor: Color(0x14FFFFFF),
+                      lightIntensity: 0.78,
+                      refractiveIndex: 1.58,
+                      chromaticAberration: 0.08,
+                      ambientStrength: 0.16,
+                      fresnelStrength: 1.30,
+                      saturation: 1.35,
+                      edgeAbsorption: 0.12,
+                      shadowElevation: 0.0,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Row(
+                        children: List.generate(_tabIcons.length, (index) {
+                          final isSelected = selectedIndex == index;
+                          return Expanded(
+                            child: _buildTabItem(
+                              icon: _tabIcons[index],
+                              isSelected: isSelected,
+                              onTap: () => onTabSelected(index),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // ĐẢO BÊN PHẢI: Nút tròn tiện ích nhanh bằng GlassContainer (LiquidOval)
+              // bọc trong khung viền đen vát quang học (Dark Glass Bevel Rim)
+              _DarkBevelGlassWrapper(
+                isOval: true,
                 borderRadius: 33,
                 child: GlassContainer(
+                  width: 66,
                   height: 66,
                   useOwnLayer: true,
                   quality: GlassQuality.premium,
-                  shape: const LiquidRoundedSuperellipse(borderRadius: 33),
+                  shape: const LiquidOval(),
                   settings: const LiquidGlassSettings(
-                    thickness: 42,
-                    blur: 5,
-                    glassColor: Color(0x14FFFFFF),
-                    lightIntensity: 0.75,
-                    refractiveIndex: 1.52,
-                    chromaticAberration: 0.06,
-                    ambientStrength: 0.15,
-                    fresnelStrength: 1.25,
-                    saturation: 1.3,
-                    edgeAbsorption: 0.0,
+                    thickness: 48,
+                    blur: 4.5,
+                    glassColor: Color(0x16FFFFFF),
+                    lightIntensity: 0.80,
+                    refractiveIndex: 1.58,
+                    chromaticAberration: 0.08,
+                    ambientStrength: 0.16,
+                    fresnelStrength: 1.30,
+                    saturation: 1.35,
+                    edgeAbsorption: 0.12,
+                    shadowElevation: 0.0,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Row(
-                      children: List.generate(_tabIcons.length, (index) {
-                        final isSelected = selectedIndex == index;
-                        return Expanded(
-                          child: _buildTabItem(
-                            icon: _tabIcons[index],
-                            isSelected: isSelected,
-                            onTap: () => onTabSelected(index),
-                          ),
-                        );
-                      }),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onQuickActionPressed,
+                      borderRadius: BorderRadius.circular(33),
+                      child: const Center(
+                        child: FourTileQuickActionIcon(size: 30),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-
-            const SizedBox(width: 12),
-
-            // ĐẢO BÊN PHẢI: Nút tròn tiện ích nhanh bằng GlassContainer (LiquidOval)
-            // bọc trong khung viền đen vát quang học (Dark Glass Bevel Rim)
-            _DarkBevelGlassWrapper(
-              isOval: true,
-              borderRadius: 33,
-              child: GlassContainer(
-                width: 66,
-                height: 66,
-                useOwnLayer: true,
-                quality: GlassQuality.premium,
-                shape: const LiquidOval(),
-                settings: const LiquidGlassSettings(
-                  thickness: 42,
-                  blur: 5,
-                  glassColor: Color(0x16FFFFFF),
-                  lightIntensity: 0.78,
-                  refractiveIndex: 1.52,
-                  chromaticAberration: 0.06,
-                  ambientStrength: 0.15,
-                  fresnelStrength: 1.25,
-                  saturation: 1.3,
-                  edgeAbsorption: 0.0,
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: onQuickActionPressed,
-                    borderRadius: BorderRadius.circular(33),
-                    child: const Center(
-                      child: FourTileQuickActionIcon(size: 30),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -317,10 +325,10 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
 
 /// Khung viền ngoài màu đen vát quang học (Dark Bevel Chamfer Frame)
 /// Mô phỏng chuẩn xác viền đen cắt vát quanh khối kính trong ảnh mẫu:
-/// - Đổ bóng nổi không gian 3D (Ambient Drop Shadow)
-/// - Dải viền đen/khói vát quang học (Dark Meniscus Chamfer Band) dày ~3.2px
+/// - Đổ bóng nhẹ thanh thoát (Ambient Contact Shadow)
+/// - Viền vát quang học thanh mảnh siêu sắc nét (Hairline Bevel Rim ~0.8px)
 /// - Đường bắt sáng specular màu trắng ở góc trên-trái
-/// - Đường bóng đổ đậm ở góc dưới-phải
+/// - Đường viền xám khói/than tinh tế ở góc dưới-phải (không bị đen dày thô)
 /// - Giữ nguyên 100% tất cả các thành phần bên trong (icons, active pill cyan, 4 ô vuông)
 class _DarkBevelGlassWrapper extends StatelessWidget {
   final Widget child;
@@ -341,15 +349,9 @@ class _DarkBevelGlassWrapper extends StatelessWidget {
         shape: isOval ? BoxShape.circle : BoxShape.rectangle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.24),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 4,
-            offset: const Offset(0, 1.5),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -359,7 +361,7 @@ class _DarkBevelGlassWrapper extends StatelessWidget {
           // 1. Giữ nguyên 100% nội dung glass và bên trong không thay đổi
           child,
 
-          // 2. Viền đen ngoài vát quang học thanh mảnh (Slim Dark Glass Rim ~1.3px)
+          // 2. Viền vát quang học thanh mảnh siêu sắc nét (Hairline Bevel Rim ~0.8px)
           Positioned.fill(
             child: IgnorePointer(
               child: CustomPaint(
@@ -389,29 +391,29 @@ class _DarkGlassBevelRimPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
 
-    // Viền đen ngoài vát quang học thanh mảnh, sắc nét (~1.3px)
-    // Tinh giản tối đa: mép trên bắt sáng specular ánh trắng bạc, mép dưới đổ bóng đen tuyền
+    // Viền vát quang học thanh mảnh siêu sắc nét (~0.8px) chuẩn phong cách kính Apple
+    // Tinh giản tối đa: mép trên bắt sáng specular ánh trắng bạc, mép dưới chuyển khói than nhẹ nhàng
     final rimPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.3
+      ..strokeWidth = 0.8
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color(0x95FFFFFF), // Specular highlight trắng bạc mép trên-trái
-          Color(0x60334155), // Slate xám thanh mảnh hông
-          Color(0xAA0F172A), // Ghi than tối
-          Color(0xD0000000), // Đen sâu mép dưới
+          Color(0xB0FFFFFF), // Specular highlight trắng ánh kim sắc nét mép trên-trái
+          Color(0x35FFFFFF), // Ánh kính chuyển tiếp
+          Color(0x2564748B), // Slate xám thanh mảnh hông
+          Color(0x481E293B), // Xám than thanh nhã mép dưới (siêu mảnh, không bị đen dày)
         ],
-        stops: [0.0, 0.25, 0.65, 1.0],
+        stops: [0.0, 0.20, 0.55, 1.0],
       ).createShader(rect);
 
     if (isOval) {
-      canvas.drawOval(rect.deflate(0.65), rimPaint);
+      canvas.drawOval(rect.deflate(0.4), rimPaint);
     } else {
       final outerRRect = RRect.fromRectAndRadius(
-        rect.deflate(0.65),
-        Radius.circular(borderRadius - 0.65),
+        rect.deflate(0.4),
+        Radius.circular(borderRadius - 0.4),
       );
       canvas.drawRRect(outerRRect, rimPaint);
     }
