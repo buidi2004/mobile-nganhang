@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -203,7 +202,7 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
                     ambientStrength: 0.15,
                     fresnelStrength: 1.25,
                     saturation: 1.3,
-                    edgeAbsorption: 0.35,
+                    edgeAbsorption: 0.0,
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -247,7 +246,7 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
                   ambientStrength: 0.15,
                   fresnelStrength: 1.25,
                   saturation: 1.3,
-                  edgeAbsorption: 0.35,
+                  edgeAbsorption: 0.0,
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -342,15 +341,15 @@ class _DarkBevelGlassWrapper extends StatelessWidget {
         shape: isOval ? BoxShape.circle : BoxShape.rectangle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.38),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.24),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.22),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 4,
+            offset: const Offset(0, 1.5),
           ),
         ],
       ),
@@ -360,7 +359,7 @@ class _DarkBevelGlassWrapper extends StatelessWidget {
           // 1. Giữ nguyên 100% nội dung glass và bên trong không thay đổi
           child,
 
-          // 2. Viền đen ngoài vát quang học (Dark Glass Chamfer Rim) chuẩn xác như ảnh mẫu
+          // 2. Viền đen ngoài vát quang học thanh mảnh (Slim Dark Glass Rim ~1.3px)
           Positioned.fill(
             child: IgnorePointer(
               child: CustomPaint(
@@ -390,78 +389,31 @@ class _DarkGlassBevelRimPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
 
-    // 1. Viền ngoài cùng mảnh (Hairline Outer Rim) với hiệu ứng bắt sáng từ góc trên-trái
-    // và bóng đổ sâu ở góc dưới-phải
-    final outerStrokePaint = Paint()
+    // Viền đen ngoài vát quang học thanh mảnh, sắc nét (~1.3px)
+    // Tinh giản tối đa: mép trên bắt sáng specular ánh trắng bạc, mép dưới đổ bóng đen tuyền
+    final rimPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
+      ..strokeWidth = 1.3
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color(0x95FFFFFF), // Bắt sáng specular màu trắng ở mép trên-trái
-          Color(0x80334155), // Chuyển tiếp ghi xám / dark slate
-          Color(0xCC0F172A), // Ghi than tối
-          Color(0xF0000000), // Mép dưới bóng đổ đen tuyền
+          Color(0x95FFFFFF), // Specular highlight trắng bạc mép trên-trái
+          Color(0x60334155), // Slate xám thanh mảnh hông
+          Color(0xAA0F172A), // Ghi than tối
+          Color(0xD0000000), // Đen sâu mép dưới
         ],
         stops: [0.0, 0.25, 0.65, 1.0],
       ).createShader(rect);
 
-    // 2. Dải viền vát quang học màu đen/khói (Dark Glass Bevel Chamfer Band) dày ~3.2px
-    // Đây chính là dải viền đen đặc trưng quanh viền kính như trong ảnh mẫu
-    final bevelBandRect = Rect.fromLTWH(1.5, 1.5, size.width - 3.0, size.height - 3.0);
-    final bevelBandRadius = math.max(0.0, borderRadius - 1.5);
-    final bevelPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.2
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Color(0x55334155), // Phần trên mờ nhẹ
-          Color(0x771E293B), // Phần thân viền tối
-          Color(0xC80A0E17), // Phần dưới viền đen đậm
-        ],
-        stops: [0.0, 0.40, 1.0],
-      ).createShader(rect);
-
-    // 3. Đường rãnh giáp ranh bên trong (Inner Transition Groove)
-    // Tách biệt giữa dải viền đen và mặt kính trong suốt ở trung tâm
-    final innerGrooveRect = Rect.fromLTWH(3.2, 3.2, size.width - 6.4, size.height - 6.4);
-    final innerGrooveRadius = math.max(0.0, borderRadius - 3.2);
-    final innerGroovePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.9
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Color(0x20FFFFFF), // Mép trên kính sáng nhẹ
-          Color(0x40000000), // Mép dưới kính tối
-        ],
-      ).createShader(rect);
-
     if (isOval) {
-      canvas.drawOval(rect.deflate(0.7), outerStrokePaint);
-      canvas.drawOval(bevelBandRect, bevelPaint);
-      canvas.drawOval(innerGrooveRect, innerGroovePaint);
+      canvas.drawOval(rect.deflate(0.65), rimPaint);
     } else {
       final outerRRect = RRect.fromRectAndRadius(
-        rect.deflate(0.7),
-        Radius.circular(borderRadius - 0.7),
+        rect.deflate(0.65),
+        Radius.circular(borderRadius - 0.65),
       );
-      final bevelRRect = RRect.fromRectAndRadius(
-        bevelBandRect,
-        Radius.circular(bevelBandRadius),
-      );
-      final innerRRect = RRect.fromRectAndRadius(
-        innerGrooveRect,
-        Radius.circular(innerGrooveRadius),
-      );
-
-      canvas.drawRRect(outerRRect, outerStrokePaint);
-      canvas.drawRRect(bevelRRect, bevelPaint);
-      canvas.drawRRect(innerRRect, innerGroovePaint);
+      canvas.drawRRect(outerRRect, rimPaint);
     }
   }
 
