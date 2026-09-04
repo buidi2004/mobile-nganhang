@@ -30,10 +30,22 @@ class SenHongApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       routerConfig: appRouter,
       builder: (context, child) {
-        // Đảm bảo Material transparency ancestor cho liquid_glass_widgets
-        return Material(
-          type: MaterialType.transparency,
-          child: child ?? const SizedBox.shrink(),
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            // Ảnh nền kính hoa văn glass_background_pattern.png trải khắp tất cả các màn hình
+            Image.asset(
+              'assets/images/glass_background_pattern.png',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+            // Các màn hình hiển thị đè lên trên ảnh nền
+            Material(
+              type: MaterialType.transparency,
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ],
         );
       },
     );

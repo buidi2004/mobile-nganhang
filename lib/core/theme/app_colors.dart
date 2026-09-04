@@ -16,16 +16,16 @@ class AppColors {
   static const Color softPurple = Color(0xFF8B5CF6);
   static const Color oceanBlue = Color(0xFF0288D1);
 
-  // Light Mode Surfaces (Chủ đạo theo yêu cầu người dùng)
-  static const Color bgLight = Color(0xFFF6F9FC);
-  static const Color bgSurfaceLight = Color(0xFFFFFFFF);
-  static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color cardBorderLight = Color(0xFFE2E8F0);
+  // Light Mode Surfaces (Chuyển sang trong suốt để hiển thị ảnh nền kính hoa văn)
+  static const Color bgLight = Colors.transparent;
+  static const Color bgSurfaceLight = Color(0xCCFFFFFF);
+  static const Color cardLight = Color(0xD9FFFFFF);
+  static const Color cardBorderLight = Color(0x66FFFFFF);
 
   // Backgrounds & Surface (Dark Mode Fintech)
-  static const Color bgDark = Color(0xFF0B0E17);
-  static const Color bgSurfaceDark = Color(0xFF131929);
-  static const Color cardDark = Color(0xFF1A2238);
+  static const Color bgDark = Colors.transparent;
+  static const Color bgSurfaceDark = Color(0xCC131929);
+  static const Color cardDark = Color(0xDD1A2238);
   static const Color cardBorderDark = Color(0x33FFFFFF);
 
   // Glassmorphism Tint Colors

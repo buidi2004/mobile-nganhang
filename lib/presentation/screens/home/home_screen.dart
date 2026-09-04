@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgLight,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -247,9 +247,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Colors.white.withOpacity(0.85),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.cardBorderLight, width: 1),
+                          border: Border.all(color: Colors.white.withOpacity(0.7), width: 1),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.04),

@@ -114,7 +114,7 @@ class BillPaymentScreen extends StatelessWidget {
                   labelText: 'Mã khách hàng / Mã danh bộ',
                   prefixIcon: const Icon(CupertinoIcons.barcode, color: AppColors.primary),
                   filled: true,
-                  fillColor: AppColors.bgDark,
+                  fillColor: const Color(0xFF1E293B),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                 ),
               ),

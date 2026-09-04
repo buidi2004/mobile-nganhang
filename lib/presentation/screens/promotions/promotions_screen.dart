@@ -72,21 +72,21 @@ class PromotionsScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(v['discount'], style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
+                                Text(v['discount'], style: AppTypography.titleMedium(color: AppColors.textPrimaryLight)),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.2),
+                                    color: AppColors.primary.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
-                                  child: Text(v['tag'], style: const TextStyle(color: AppColors.primaryLight, fontSize: 11)),
+                                  child: Text(v['tag'], style: const TextStyle(color: AppColors.primaryDark, fontSize: 11, fontWeight: FontWeight.w600)),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 4),
-                            Text(v['desc'], style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
+                            Text(v['desc'], style: AppTypography.bodySmall(color: AppColors.textSecondaryLight)),
                             const SizedBox(height: 6),
-                            Text(v['expiry'], style: AppTypography.bodySmall(color: AppColors.textMutedDark)),
+                            Text(v['expiry'], style: AppTypography.bodySmall(color: AppColors.textMutedLight)),
                           ],
                         ),
                       ),

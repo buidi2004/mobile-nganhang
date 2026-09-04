@@ -99,12 +99,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       label: Text(_filters[idx]),
                       selected: isSelected,
                       selectedColor: AppColors.primary,
-                      backgroundColor: AppColors.cardDark,
+                      backgroundColor: Colors.white.withOpacity(0.8),
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : AppColors.textSecondaryDark,
+                        color: isSelected ? Colors.white : AppColors.textPrimaryLight,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
-                      side: const BorderSide(color: AppColors.cardBorderDark),
+                      side: BorderSide(color: Colors.white.withOpacity(0.6)),
                       onSelected: (_) => setState(() => _selectedFilter = idx),
                     ),
                   );
@@ -141,11 +141,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         ),
                         title: Text(
                           tx['title'],
-                          style: AppTypography.titleMedium(color: AppColors.textPrimaryDark),
+                          style: AppTypography.titleMedium(color: AppColors.textPrimaryLight),
                         ),
                         subtitle: Text(
                           '${tx['desc']}\n${tx['date']}',
-                          style: AppTypography.bodySmall(color: AppColors.textSecondaryDark),
+                          style: AppTypography.bodySmall(color: AppColors.textSecondaryLight),
                         ),
                         isThreeLine: true,
                         trailing: Column(
@@ -155,7 +155,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                             Text(
                               '${isPositive ? '+' : ''}${CurrencyFormatter.formatVND(tx['amount'])}',
                               style: AppTypography.titleMedium(
-                                color: isPositive ? AppColors.emeraldGreen : AppColors.textPrimaryDark,
+                                color: isPositive ? AppColors.emeraldGreen : AppColors.textPrimaryLight,
                               ),
                             ),
                             const SizedBox(height: 4),

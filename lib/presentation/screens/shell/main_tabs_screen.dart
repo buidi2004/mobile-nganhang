@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -27,6 +26,13 @@ class MainTabsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassScaffold(
       contentAwareBrightness: true,
+      backgroundColor: Colors.transparent,
+      background: Image.asset(
+        'assets/images/glass_background_pattern.png',
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+      ),
       bottomBarHeight: 88,
       bottomBar: FloatingGlassBottomBar(
         selectedIndex: navigationShell.currentIndex,
