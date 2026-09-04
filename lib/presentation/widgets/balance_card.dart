@@ -68,20 +68,7 @@ class BalanceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-            // 1. HOA VĂN HOA SEN CHÌM BẢN QUYỀN SENBANK Ở GÓC PHẢI DƯỚI
-            Positioned(
-              right: -30,
-              bottom: -30,
-              child: Opacity(
-                opacity: 0.08,
-                child: Image.asset(
-                  'assets/icons/senbank_logo.png',
-                  width: 190,
-                  height: 190,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
+
 
             // 2. VỆT SÁNG NGHỆ THUẬT GÓC TRÊN TRÁI
             Positioned(
