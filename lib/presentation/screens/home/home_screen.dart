@@ -306,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Khoảng trống đệm để cuộn banner lướt qua dưới thanh kính nổi (Glass Refraction)
             const SliverToBoxAdapter(
-              child: SizedBox(height: 85),
+              child: SizedBox(height: 140),
             ),
           ],
         ),
