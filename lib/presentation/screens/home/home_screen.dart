@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
-import 'package:sen_hong_bank/presentation/widgets/balance_card.dart';
 import 'package:sen_hong_bank/presentation/widgets/curved_promo_banner.dart';
 import 'package:sen_hong_bank/presentation/widgets/vietnam_hero_header.dart';
 
@@ -61,87 +60,16 @@ class _HomeScreenState extends State<HomeScreen> {
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // 1. Header Lễ Hội SenBank (Banner đỏ tòa nhà SenBank + Điểm giao thoa quang học + Search Bar + 2 Thẻ Tiết kiệm/Thẻ SenBank)
+          // 1. Header Lễ Hội SenBank Tích Hợp Toàn Bộ Thông Tin (Lời chào, STK, Số dư)
           SliverToBoxAdapter(
             child: VietnamHeroHeader(
-              onSearchTap: () => context.push('/history'),
-              onSavingsTap: () => context.push('/bills'),
-              onCardsTap: () => context.push('/cards'),
+              balance: _balance,
+              isHidden: _hideBalance,
+              onToggleVisibility: () => setState(() => _hideBalance = !_hideBalance),
+              onNotificationTap: () => context.push('/history'),
+              onProfileTap: () {},
             ),
           ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-          // 2. Greeting bar
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: AppColors.primary.withOpacity(0.12),
-                        child: const Icon(CupertinoIcons.person_fill, color: AppColors.primary, size: 20),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Xin chào,',
-                            style: AppTypography.bodySmall(color: AppColors.textSecondaryLight),
-                          ),
-                          Text(
-                            'BÙI ĐỨC VƯƠNG',
-                            style: AppTypography.titleMedium(color: AppColors.textPrimaryLight),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Stack(
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(CupertinoIcons.bell_fill, color: AppColors.textPrimaryLight, size: 22),
-                      ),
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          width: 9,
-                          height: 9,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-            // Balance Card Section
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: BalanceCard(
-                  balance: _balance,
-                  isHidden: _hideBalance,
-                  onToggleVisibility: () => setState(() => _hideBalance = !_hideBalance),
-                  onDeposit: () => context.push('/transfer'),
-                  onWithdraw: () => context.push('/transfer'),
-                  onTransfer: () => context.push('/transfer'),
-                  onQr: () => context.push('/my-qr'),
-                ),
-              ),
-            ),
 
             // Quick Services Grid
             SliverToBoxAdapter(

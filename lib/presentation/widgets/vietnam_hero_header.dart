@@ -1,261 +1,476 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
-/// Header Lễ hội SenBank: Tòa nhà hội sở SenBank, hoa sen vàng, cờ đỏ sao vàng.
-/// Không có xe cộ, hòa quyện quang học vào ảnh nền hoa văn (glass_background_pattern).
+/// Header Lễ hội SenBank:
+/// - Toàn bộ thông tin tài khoản (Lời chào, STK, Chip EMV, Số dư 12.580.000 VND) hiển thị trên banner
+/// - Tòa nhà SenBank, hoa sen vàng và quảng trường thông thoáng, trọn vẹn không bị che khuất
 class VietnamHeroHeader extends StatelessWidget {
-  final VoidCallback? onSearchTap;
-  final VoidCallback? onSavingsTap;
-  final VoidCallback? onCardsTap;
+  final double balance;
+  final bool isHidden;
+  final VoidCallback onToggleVisibility;
+  final VoidCallback? onDeposit;
+  final VoidCallback? onWithdraw;
+  final VoidCallback? onTransfer;
+  final VoidCallback? onQr;
+  final VoidCallback? onNotificationTap;
+  final VoidCallback? onProfileTap;
 
   const VietnamHeroHeader({
     super.key,
-    this.onSearchTap,
-    this.onSavingsTap,
-    this.onCardsTap,
+    required this.balance,
+    required this.isHidden,
+    required this.onToggleVisibility,
+    this.onDeposit,
+    this.onWithdraw,
+    this.onTransfer,
+    this.onQr,
+    this.onNotificationTap,
+    this.onProfileTap,
   });
+
+  static const String _accountNumber = '1088 6688 9999';
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
-    final bannerHeight = 230.0 + topPadding;
+    final currencyFormatter = NumberFormat('#,###', 'vi_VN');
+    final displayAmount = isHidden ? '••••••••' : currencyFormatter.format(balance);
+    final bannerHeight = 265.0 + topPadding;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // 1. KHU VỰC BANNER ĐỎ SENBANK & ĐIỂM GIAO THOA QUANG HỌC VỚI ẢNH NỀN
-        SizedBox(
-          height: bannerHeight + 26,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // ẢNH NỀN BANNER ĐỎ TÒA NHÀ SENBANK TRẢI DÀI LÊN STATUS BAR VÀ FADE OUT Ở ĐÁY
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: bannerHeight,
-                child: ShaderMask(
-                  shaderCallback: (Rect bounds) {
-                    return const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black,
-                        Colors.black,
-                        Color(0xEE000000),
-                        Color(0x77000000),
-                        Colors.transparent,
-                      ],
-                      stops: [0.0, 0.58, 0.78, 0.90, 1.0],
-                    ).createShader(bounds);
-                  },
-                  blendMode: BlendMode.dstIn,
-                  child: Image.asset(
-                    'assets/images/senbank_hero_banner.jpg',
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
+    return SizedBox(
+      height: bannerHeight,
+      width: double.infinity,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+            // 1. ẢNH NỀN BANNER ĐỎ TÒA NHÀ SENBANK TRẢI LÊN STATUS BAR VÀ FADE OUT Ở ĐÁY
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: bannerHeight,
+              child: ShaderMask(
+                shaderCallback: (Rect bounds) {
+                  return const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black,
+                      Colors.black,
+                      Color(0xEE000000),
+                      Color(0x88000000),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.65, 0.82, 0.94, 1.0],
+                  ).createShader(bounds);
+                },
+                blendMode: BlendMode.dstIn,
+                child: Image.asset(
+                  'assets/images/senbank_hero_banner.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                ),
+              ),
+            ),
+
+            // 2. LỚP PHỦ GRADIENT TỐI NHẸ ĐỂ CHỮ VÀ SỐ DƯ NỔI BẬT SẮC NÉT
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: bannerHeight,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.40),
+                      Colors.black.withOpacity(0.10),
+                      Colors.black.withOpacity(0.50),
+                    ],
+                    stops: const [0.0, 0.45, 1.0],
                   ),
                 ),
               ),
+            ),
 
-              // VỆT SÁNG MỜ DỊU NHẸ Ở ĐIỂM GIAO THOA (MIST GLOW)
-              Positioned(
-                bottom: 12,
-                left: 0,
-                right: 0,
-                height: 55,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.white.withOpacity(0.15),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // THANH TÌM KIẾM DỊCH VỤ SENBANK GỐI NỬA LÊN BANNER VÀ NỬA LÊN ẢNH NỀN
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 0,
-                child: Container(
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(27),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 18,
-                        offset: const Offset(0, 6),
+            // 3. NỘI DUNG TÀI KHOẢN Ở NỬA TRÊN (Không che tòa nhà hay quảng trường)
+            Positioned(
+              top: topPadding + 10,
+              left: 20,
+              right: 20,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // HÀNG 1: LỜI CHÀO & AVATAR & THÔNG BÁO
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      InkWell(
+                        onTap: onProfileTap,
+                        borderRadius: BorderRadius.circular(24),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFFFFD54F),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: const CircleAvatar(
+                                radius: 19,
+                                backgroundColor: Colors.white24,
+                                child: Icon(
+                                  CupertinoIcons.person_fill,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Xin chào,',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  'BÙI ĐỨC VƯƠNG',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.2,
+                                    shadows: const [
+                                      Shadow(
+                                        color: Colors.black45,
+                                        blurRadius: 4,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
+
+                      // Nút chuông thông báo
+                      Stack(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withOpacity(0.25),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: onNotificationTap,
+                              icon: const Icon(
+                                CupertinoIcons.bell_fill,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 4,
+                            top: 4,
+                            child: Container(
+                              width: 9,
+                              height: 9,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFEF4444),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(27),
-                      onTap: onSearchTap,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              CupertinoIcons.search,
-                              size: 22,
-                              color: Color(0xFF334155),
+
+                  const SizedBox(height: 18),
+
+                  // HÀNG 2: CHIP EMV + TK THANH TOÁN & HUY HIỆU SENBANK PREMIER
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          // Chip EMV kim loại mạ vàng
+                          Container(
+                            width: 28,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFFFDF7A),
+                                  Color(0xFFD4AF37),
+                                  Color(0xFFAA771C),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              border: Border.all(
+                                color: const Color(0xFF8B6508),
+                                width: 0.5,
+                              ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Tìm kiếm dịch vụ, chuyển tiền, tiết kiệm...',
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF64748B),
-                                ),
+                            child: CustomPaint(painter: _EmvChipPainter()),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            CupertinoIcons.radiowaves_right,
+                            size: 15,
+                            color: Colors.white70,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'TK THANH TOÁN',
+                            style: GoogleFonts.inter(
+                              color: Colors.white70,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Huy hiệu SenBank Premier
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.35),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFFFFD54F).withOpacity(0.6),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset(
+                              'assets/icons/senbank_logo.png',
+                              width: 14,
+                              height: 14,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'SenBank Premier',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: const Color(0xFFFFE082),
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
 
-        const SizedBox(height: 14),
+                  const SizedBox(height: 10),
 
-        // 2. HAI THẺ THAO TÁC ĐẦU TIÊN CỦA SENBANK: "GỬI TIẾT KIỆM" & "MỞ THẺ SENBANK"
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              // Thẻ Gửi tiết kiệm
-              Expanded(
-                child: _buildServiceCard(
-                  title: 'Gửi tiết kiệm',
-                  subtitle: 'Lãi suất 7.2%/năm',
-                  imagePath: 'assets/images/banking_savings.png',
-                  imageHeight: 68,
-                  imageBottom: 4,
-                  imageRight: 4,
-                  onTap: onSavingsTap,
-                ),
+                  // HÀNG 3: SỐ TÀI KHOẢN VỚI NÚT SAO CHÉP NHANH & MẮT ẨN/HIỆN
+                  Row(
+                    children: [
+                      Text(
+                        'STK:',
+                        style: GoogleFonts.inter(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(const ClipboardData(text: '108866889999'));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  const Icon(CupertinoIcons.checkmark_alt_circle_fill, color: Colors.white),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Đã sao chép STK: $_accountNumber',
+                                    style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: const Color(0xFF0F3E6D),
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _accountNumber,
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              const Icon(
+                                CupertinoIcons.doc_on_doc,
+                                color: Colors.white70,
+                                size: 12,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      // Khả dụng + Icon Mắt
+                      InkWell(
+                        onTap: onToggleVisibility,
+                        borderRadius: BorderRadius.circular(6),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Khả dụng',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white70,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(
+                                isHidden ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye_fill,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // HÀNG 4: SỐ TIỀN HIỂN THỊ CHUẨN TYPOGRAPHY TÀI CHÍNH
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        displayAmount,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.6,
+                          shadows: const [
+                            Shadow(
+                              color: Colors.black54,
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                      Text(
+                        'VND',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF26E5DC), // Cyan highlight
+                          letterSpacing: 0.8,
+                          shadows: const [
+                            Shadow(
+                              color: Colors.black45,
+                              blurRadius: 4,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              // Thẻ Mở thẻ SenBank
-              Expanded(
-                child: _buildServiceCard(
-                  title: 'Mở thẻ SenBank',
-                  subtitle: 'Ưu đãi hoàn 15%',
-                  imagePath: 'assets/images/banking_card.png',
-                  imageHeight: 68,
-                  imageBottom: 4,
-                  imageRight: 4,
-                  onTap: onCardsTap,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      );
+  }
+}
+
+/// CustomPainter vẽ các vân rãnh vi mạch chip thông minh EMV
+class _EmvChipPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF8B6508).withOpacity(0.55)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.6;
+
+    // Đường phân cách vi mạch trung tâm
+    canvas.drawLine(
+      Offset(size.width * 0.45, 0),
+      Offset(size.width * 0.45, size.height),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(0, size.height * 0.38),
+      Offset(size.width, size.height * 0.38),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(0, size.height * 0.68),
+      Offset(size.width, size.height * 0.68),
+      paint,
     );
   }
 
-  Widget _buildServiceCard({
-    required String title,
-    required String subtitle,
-    required String imagePath,
-    required double imageHeight,
-    required double imageBottom,
-    required double imageRight,
-    required VoidCallback? onTap,
-  }) {
-    return Container(
-      height: 110,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.92),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.95),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: onTap,
-          child: Stack(
-            children: [
-              // Tiêu đề & phụ đề dịch vụ ở góc trên trái
-              Positioned(
-                top: 12,
-                left: 14,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F172A),
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFE11D48), // Rose gold accent
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Hình ảnh 3D ở góc dưới phải
-              Positioned(
-                bottom: imageBottom,
-                right: imageRight,
-                child: Image.asset(
-                  imagePath,
-                  height: imageHeight,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
