@@ -132,7 +132,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: GlassCard(
                       quality: GlassQuality.minimal, // Minimal: tối ưu 0 chi phí shader khi cuộn mượt mà
-                      child: ListTile(
+                      child: Material(type: MaterialType.transparency, child: ListTile(
                         onTap: () {
                           context.push(
                             '/history/detail?id=${tx['id']}&title=${tx['title']}&amount=${tx['amount']}&time=${tx['date']}&note=${tx['desc']}',
@@ -175,7 +175,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                             ),
                           ],
                         ),
-                      ),
+                      )),
                     ),
                   );
                 },

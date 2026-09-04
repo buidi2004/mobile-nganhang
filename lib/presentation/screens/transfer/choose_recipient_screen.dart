@@ -226,7 +226,7 @@ class _ChooseRecipientScreenState extends State<ChooseRecipientScreen> {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: GlassCard(
                       quality: GlassQuality.minimal,
-                      child: ListTile(
+                      child: Material(type: MaterialType.transparency, child: ListTile(
                         onTap: () => context.push('/transfer/amount?recipient=${b['name']}'),
                         leading: CircleAvatar(
                           backgroundColor: AppColors.primary.withOpacity(0.15),
@@ -235,7 +235,7 @@ class _ChooseRecipientScreenState extends State<ChooseRecipientScreen> {
                         title: Text(b['name']!, style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                         subtitle: Text('${b['bank']} • ${b['account']}', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                         trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
-                      ),
+                      )),
                     ),
                   );
                 },

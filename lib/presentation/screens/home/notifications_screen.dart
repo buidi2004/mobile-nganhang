@@ -153,7 +153,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           padding: const EdgeInsets.only(bottom: 12),
                           child: GlassCard(
                             quality: GlassQuality.minimal,
-                            child: ListTile(
+                            child: Material(type: MaterialType.transparency, child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               onTap: () {
                                 setState(() => item['isRead'] = true);
@@ -217,7 +217,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 ],
                               ),
                               trailing: const Icon(CupertinoIcons.chevron_forward, color: AppColors.textMutedDark, size: 14),
-                            ),
+                            )),
                           ),
                         );
                       },

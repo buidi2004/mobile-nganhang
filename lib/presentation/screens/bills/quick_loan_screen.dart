@@ -232,3 +232,4 @@ class _QuickLoanScreenState extends State<QuickLoanScreen> {
     );
   }
 }
+

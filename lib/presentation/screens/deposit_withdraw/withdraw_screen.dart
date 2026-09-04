@@ -135,7 +135,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                     ),
                     child: GlassCard(
                       quality: GlassQuality.minimal,
-                      child: ListTile(
+                      child: Material(type: MaterialType.transparency, child: ListTile(
                         onTap: () => setState(() => _selectedBankIdx = idx),
                         leading: CircleAvatar(
                           backgroundColor: AppColors.bottomBarCyan.withOpacity(0.2),
@@ -146,7 +146,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                         trailing: isSelected
                             ? const Icon(CupertinoIcons.checkmark_circle_fill, color: AppColors.bottomBarCyan)
                             : const Icon(CupertinoIcons.circle, color: AppColors.textMutedDark),
-                      ),
+                      )),
                     ),
                   ),
                 );

@@ -75,7 +75,7 @@ class _BillInputScreenState extends State<BillInputScreen> {
                     final isLast = idx == _providers.length - 1;
                     return Column(
                       children: [
-                        ListTile(
+                        Material(type: MaterialType.transparency, child: ListTile(
                           onTap: () => setState(() => _selectedProviderIdx = idx),
                           leading: CircleAvatar(
                             backgroundColor: AppColors.primary.withOpacity(0.15),
@@ -86,7 +86,7 @@ class _BillInputScreenState extends State<BillInputScreen> {
                           trailing: isSelected
                               ? const Icon(CupertinoIcons.checkmark_circle_fill, color: AppColors.primary)
                               : const Icon(CupertinoIcons.circle, color: AppColors.textMutedDark),
-                        ),
+                        )),
                         if (!isLast) const Divider(height: 1, indent: 56, color: AppColors.cardBorderDark),
                       ],
                     );

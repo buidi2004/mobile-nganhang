@@ -135,7 +135,7 @@ class _BeneficiariesScreenState extends State<BeneficiariesScreen> {
                           padding: const EdgeInsets.only(bottom: 12),
                           child: GlassCard(
                             quality: GlassQuality.minimal,
-                            child: ListTile(
+                            child: Material(type: MaterialType.transparency, child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                               onTap: () {
                                 context.push(
@@ -190,7 +190,7 @@ class _BeneficiariesScreenState extends State<BeneficiariesScreen> {
                                   const PopupMenuItem(value: 'delete', child: Text('Xóa người này', style: TextStyle(color: AppColors.error))),
                                 ],
                               ),
-                            ),
+                            )),
                           ),
                         );
                       },

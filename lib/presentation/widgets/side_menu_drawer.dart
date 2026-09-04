@@ -176,7 +176,7 @@ class SideMenuDrawer extends StatelessWidget {
     required String title,
     required String route,
   }) {
-    return ListTile(
+    return Material(type: MaterialType.transparency, child: ListTile(
       leading: Icon(icon, color: AppColors.primaryLight, size: 20),
       title: Text(title, style: AppTypography.bodyMedium(color: Colors.white)),
       trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 14),
@@ -184,6 +184,6 @@ class SideMenuDrawer extends StatelessWidget {
         Navigator.pop(context);
         context.push(route);
       },
-    );
+    ));
   }
 }

@@ -138,12 +138,12 @@ class MoreScreen extends StatelessWidget {
               final isLast = idx == items.length - 1;
               return Column(
                 children: [
-                  ListTile(
+                  Material(type: MaterialType.transparency, child: ListTile(
                     onTap: item['onTap'] as VoidCallback,
                     leading: Icon(item['icon'] as IconData, color: AppColors.primary, size: 22),
                     title: Text(item['title'] as String, style: AppTypography.bodyMedium(color: AppColors.textPrimaryDark)),
                     trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
-                  ),
+                  )),
                   if (!isLast) const Divider(height: 1, indent: 54, color: AppColors.cardBorderDark),
                 ],
               );

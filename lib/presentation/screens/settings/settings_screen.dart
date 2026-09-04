@@ -138,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             GlassCard(
               quality: GlassQuality.minimal,
-              child: ListTile(
+              child: Material(type: MaterialType.transparency, child: ListTile(
                 leading: const Icon(CupertinoIcons.globe, color: AppColors.primary),
                 title: Text('Ngôn ngữ', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                 trailing: DropdownButton<String>(
@@ -151,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (val != null) setState(() => _selectedLanguage = val);
                   },
                 ),
-              ),
+              )),
             ),
 
             const SizedBox(height: 24),
@@ -160,13 +160,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             GlassCard(
               quality: GlassQuality.minimal,
-              child: ListTile(
+              child: Material(type: MaterialType.transparency, child: ListTile(
                 onTap: () => context.push('/settings/config'),
                 leading: const Icon(CupertinoIcons.gear_alt_fill, color: AppColors.accentGold),
                 title: Text('Cấu hình API Backend', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                 subtitle: Text('Đổi URL Server máy chủ dev / staging / prod', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                 trailing: const Icon(CupertinoIcons.chevron_forward, color: AppColors.textMutedDark, size: 16),
-              ),
+              )),
             ),
           ],
         ),

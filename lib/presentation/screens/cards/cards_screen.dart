@@ -213,7 +213,7 @@ class _CardsScreenState extends State<CardsScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassCard(
         quality: GlassQuality.minimal,
-        child: ListTile(
+        child: Material(type: MaterialType.transparency, child: ListTile(
           onTap: onTap,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           leading: Container(
@@ -228,7 +228,7 @@ class _CardsScreenState extends State<CardsScreen> {
           title: Text(title, style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
           subtitle: Text(subtitle, style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
           trailing: trailing ?? const Icon(Iconsax.arrow_right_3, size: 18, color: AppColors.textMutedDark),
-        ),
+        )),
       ),
     );
   }

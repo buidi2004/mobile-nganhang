@@ -84,7 +84,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: GlassCard(
                   quality: GlassQuality.minimal,
-                  child: ListTile(
+                  child: Material(type: MaterialType.transparency, child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     onTap: () => context.push(f['route'] as String),
                     leading: Container(
@@ -99,7 +99,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     title: Text(f['title'] as String, style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                     subtitle: Text(f['sub'] as String, style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                     trailing: const Icon(CupertinoIcons.chevron_forward, color: AppColors.textMutedDark, size: 16),
-                  ),
+                  )),
                 ),
               );
             }),

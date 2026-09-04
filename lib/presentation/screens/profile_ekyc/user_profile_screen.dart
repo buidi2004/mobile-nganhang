@@ -144,37 +144,37 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 quality: GlassQuality.minimal,
                 child: Column(
                   children: [
-                    ListTile(
+                    Material(type: MaterialType.transparency, child: ListTile(
                       onTap: () => context.push('/profile/identity'),
                       leading: const Icon(Iconsax.document_text_copy, color: AppColors.primary),
                       title: Text('Thông tin giấy tờ CCCD', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                       subtitle: Text('CCCD gắn chip: 001204018899', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                       trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
-                    ),
+                    )),
                     const Divider(height: 1, indent: 56, color: AppColors.cardBorderDark),
-                    ListTile(
+                    Material(type: MaterialType.transparency, child: ListTile(
                       onTap: () => context.push('/profile/kyc-level'),
                       leading: const Icon(Iconsax.chart_2, color: AppColors.accentGold),
                       title: Text('Hạn mức giao dịch (Kyc Level)', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                       subtitle: Text('Hạn mức hiện tại: 100.000.000đ/ngày', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                       trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
-                    ),
+                    )),
                     const Divider(height: 1, indent: 56, color: AppColors.cardBorderDark),
-                    ListTile(
+                    Material(type: MaterialType.transparency, child: ListTile(
                       onTap: () => context.push('/profile/digital-signature'),
                       leading: const Icon(Iconsax.security_safe, color: AppColors.vividTeal),
                       title: Text('Chữ ký số & Smart OTP', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                       subtitle: Text('Chứng thư số cá nhân PKI', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                       trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
-                    ),
+                    )),
                     const Divider(height: 1, indent: 56, color: AppColors.cardBorderDark),
-                    ListTile(
+                    Material(type: MaterialType.transparency, child: ListTile(
                       onTap: () => context.push('/profile/email-settings'),
                       leading: const Icon(Iconsax.direct_send, color: AppColors.softPurple),
                       title: Text('Cài đặt Email nhận hóa đơn VAT', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                       subtitle: Text('Nhận sao kê định kỳ & biên lai điện tử', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                       trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
-                    ),
+                    )),
                   ],
                 ),
               ),

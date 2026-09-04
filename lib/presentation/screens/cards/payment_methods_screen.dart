@@ -197,7 +197,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: GlassCard(
                   quality: GlassQuality.minimal,
-                  child: ListTile(
+                  child: Material(type: MaterialType.transparency, child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     leading: Container(
                       width: 44,
@@ -225,7 +225,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                               _showOptionSheet(m);
                             },
                           ),
-                  ),
+                  )),
                 ),
               );
             }),
@@ -252,7 +252,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
+            Material(type: MaterialType.transparency, child: ListTile(
               leading: const Icon(CupertinoIcons.checkmark_seal_fill, color: AppColors.emeraldGreen),
               title: const Text('Đặt làm phương thức mặc định', style: TextStyle(color: Colors.white)),
               onTap: () {
@@ -263,8 +263,8 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   }
                 });
               },
-            ),
-            ListTile(
+            )),
+            Material(type: MaterialType.transparency, child: ListTile(
               leading: const Icon(CupertinoIcons.trash_fill, color: AppColors.error),
               title: const Text('Hủy liên kết thẻ này', style: TextStyle(color: AppColors.error)),
               onTap: () {
@@ -273,7 +273,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   _methods.removeWhere((m) => m['id'] == item['id']);
                 });
               },
-            ),
+            )),
           ],
         ),
       ),

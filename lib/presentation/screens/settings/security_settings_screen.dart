@@ -157,26 +157,26 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
               quality: GlassQuality.minimal,
               child: Column(
                 children: [
-                  ListTile(
+                  Material(type: MaterialType.transparency, child: ListTile(
                     title: Text('Đổi mật khẩu đăng nhập', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                     subtitle: Text('Cập nhật định kỳ để bảo vệ tài khoản', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                     trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
                     onTap: _showChangePasswordModal,
-                  ),
+                  )),
                   const Divider(height: 1, indent: 16, endIndent: 16, color: AppColors.cardBorderDark),
-                  ListTile(
+                  Material(type: MaterialType.transparency, child: ListTile(
                     title: Text('Đổi mã PIN giao dịch 6 số', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                     subtitle: Text('PIN ký các lệnh chuyển tiền & rút tiền', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                     trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
                     onTap: () => context.push('/auth/set-pin'),
-                  ),
+                  )),
                   const Divider(height: 1, indent: 16, endIndent: 16, color: AppColors.cardBorderDark),
-                  ListTile(
+                  Material(type: MaterialType.transparency, child: ListTile(
                     title: Text('Quên mã PIN giao dịch?', style: AppTypography.titleMedium(color: AppColors.primaryLight)),
                     subtitle: Text('Xác minh danh tính để đặt lại mã PIN', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                     trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
                     onTap: () => context.push('/auth/forgot-pin'),
-                  ),
+                  )),
                 ],
               ),
             ),
@@ -187,13 +187,13 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
 
             GlassCard(
               quality: GlassQuality.minimal,
-              child: ListTile(
+              child: Material(type: MaterialType.transparency, child: ListTile(
                 onTap: () => context.push('/settings/devices'),
                 leading: const Icon(Iconsax.devices_1, color: AppColors.primary),
                 title: Text('Quản lý phiên đăng nhập', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
                 subtitle: Text('Xem các thiết bị đang đăng nhập & đăng xuất từ xa', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
                 trailing: const Icon(Iconsax.arrow_right_3, color: AppColors.textMutedDark, size: 16),
-              ),
+              )),
             ),
           ],
         ),

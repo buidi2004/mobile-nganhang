@@ -170,7 +170,7 @@ class ReferralScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: GlassCard(
                     quality: GlassQuality.minimal,
-                    child: ListTile(
+                    child: Material(type: MaterialType.transparency, child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       leading: CircleAvatar(
                         backgroundColor: AppColors.primary.withOpacity(0.15),
@@ -189,7 +189,7 @@ class ReferralScreen extends StatelessWidget {
                           Text(f['status'] as String, style: const TextStyle(color: AppColors.textMutedDark, fontSize: 10)),
                         ],
                       ),
-                    ),
+                    )),
                   ),
                 );
               }),

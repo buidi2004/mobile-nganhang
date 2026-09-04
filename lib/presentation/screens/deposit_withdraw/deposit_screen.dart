@@ -94,7 +94,7 @@ class _DepositScreenState extends State<DepositScreen> {
                     ),
                     child: GlassCard(
                       quality: GlassQuality.minimal,
-                      child: ListTile(
+                      child: Material(type: MaterialType.transparency, child: ListTile(
                         onTap: () => setState(() => _selectedSource = idx),
                         leading: Icon(CupertinoIcons.creditcard_fill, color: isSelected ? AppColors.bottomBarCyan : AppColors.textSecondaryDark),
                         title: Text('${s['bank']} (${s['num']})', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
@@ -102,7 +102,7 @@ class _DepositScreenState extends State<DepositScreen> {
                         trailing: isSelected
                             ? const Icon(CupertinoIcons.checkmark_circle_fill, color: AppColors.bottomBarCyan)
                             : const Icon(CupertinoIcons.circle, color: AppColors.textMutedDark),
-                      ),
+                      )),
                     ),
                   ),
                 );

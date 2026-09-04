@@ -1,6 +1,6 @@
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 /// Icon 4 ô vuông bo góc đa sắc XOAY NGHIÊNG CHÉO 3D kèm ngôi sao lấp lánh (Sparkle)
@@ -306,18 +306,11 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
   @override
   Size get preferredSize => const Size.fromHeight(88);
 
-  static const List<IconData> _tabIconsLinear = [
-    Iconsax.home_2,
-    Iconsax.receipt_item,
-    Iconsax.notification,
-    Iconsax.profile_circle,
-  ];
-
-  static const List<IconData> _tabIconsBold = [
-    Iconsax.home_2_copy,
-    Iconsax.receipt_item_copy,
-    Iconsax.notification_copy,
-    Iconsax.profile_circle_copy,
+  static const List<IconData> _tabIcons = [
+    CupertinoIcons.house_fill,
+    CupertinoIcons.clock_fill,
+    CupertinoIcons.bell_fill,
+    CupertinoIcons.person_fill,
   ];
 
   @override
@@ -351,11 +344,11 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                           child: Row(
-                            children: List.generate(_tabIconsLinear.length, (index) {
+                            children: List.generate(_tabIcons.length, (index) {
                               final isSelected = selectedIndex == index;
                               return Expanded(
                                 child: _buildTabItem(
-                                  icon: isSelected ? _tabIconsBold[index] : _tabIconsLinear[index],
+                                  icon: _tabIcons[index],
                                   isSelected: isSelected,
                                   onTap: () => onTabSelected(index),
                                 ),

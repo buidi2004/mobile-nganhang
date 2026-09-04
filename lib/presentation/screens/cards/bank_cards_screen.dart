@@ -171,7 +171,7 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: GlassCard(
                   quality: GlassQuality.minimal,
-                  child: ListTile(
+                  child: Material(type: MaterialType.transparency, child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     leading: CircleAvatar(
                       backgroundColor: AppColors.primary.withOpacity(0.18),
@@ -195,7 +195,7 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
                             icon: const Icon(CupertinoIcons.ellipsis, color: AppColors.textMutedDark),
                             onPressed: () => _showBankOptions(b),
                           ),
-                  ),
+                  )),
                 ),
               );
             }),
@@ -222,7 +222,7 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
+            Material(type: MaterialType.transparency, child: ListTile(
               leading: const Icon(CupertinoIcons.checkmark_seal_fill, color: AppColors.emeraldGreen),
               title: const Text('Đặt làm tài khoản nhận tiền mặc định', style: TextStyle(color: Colors.white)),
               onTap: () {
@@ -233,8 +233,8 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
                   }
                 });
               },
-            ),
-            ListTile(
+            )),
+            Material(type: MaterialType.transparency, child: ListTile(
               leading: const Icon(CupertinoIcons.trash_fill, color: AppColors.error),
               title: const Text('Hủy liên kết tài khoản này', style: TextStyle(color: AppColors.error)),
               onTap: () {
@@ -243,7 +243,7 @@ class _BankCardsScreenState extends State<BankCardsScreen> {
                   _banks.removeWhere((item) => item['id'] == b['id']);
                 });
               },
-            ),
+            )),
           ],
         ),
       ),
