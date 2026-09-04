@@ -38,7 +38,7 @@ class VietnamHeroHeader extends StatelessWidget {
     final topPadding = MediaQuery.of(context).padding.top;
     final currencyFormatter = NumberFormat('#,###', 'vi_VN');
     final displayAmount = isHidden ? '••••••••' : currencyFormatter.format(balance);
-    final bannerHeight = 265.0 + topPadding;
+    final bannerHeight = 280.0 + topPadding;
 
     return SizedBox(
       height: bannerHeight,
@@ -46,57 +46,59 @@ class VietnamHeroHeader extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-            // 1. ẢNH NỀN BANNER ĐỎ TÒA NHÀ SENBANK TRẢI LÊN STATUS BAR VÀ FADE OUT Ở ĐÁY
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: bannerHeight,
-              child: ShaderMask(
-                shaderCallback: (Rect bounds) {
-                  return const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black,
-                      Colors.black,
-                      Color(0xEE000000),
-                      Color(0x88000000),
-                      Colors.transparent,
-                    ],
-                    stops: [0.0, 0.65, 0.82, 0.94, 1.0],
-                  ).createShader(bounds);
-                },
-                blendMode: BlendMode.dstIn,
-                child: Image.asset(
-                  'assets/images/senbank_hero_banner.jpg',
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                ),
-              ),
-            ),
-
-            // 2. LỚP PHỦ GRADIENT TỐI NHẸ ĐỂ CHỮ VÀ SỐ DƯ NỔI BẬT SẮC NÉT
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: bannerHeight,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.40),
-                      Colors.black.withOpacity(0.10),
-                      Colors.black.withOpacity(0.50),
-                    ],
-                    stops: const [0.0, 0.45, 1.0],
+          // 1. PHÔNG NỀN LÀM MỜ TỐI ƯU TUYỆT ĐỐI (ẢNH BANNER + LỚP PHỦ CHỮ ĐỀU FADE OUT MỊN MÀNG)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: bannerHeight,
+            child: ShaderMask(
+              shaderCallback: (Rect bounds) {
+                return const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black,       // 0% -> 50%: Giữ 100% độ rõ cho thông tin và kiến trúc
+                    Colors.black,
+                    Color(0xF5000000),  // 60%: Bắt đầu chuyển tiếp siêu êm
+                    Color(0xD8000000),  // 70%
+                    Color(0xA0000000),  // 78%
+                    Color(0x60000000),  // 86%
+                    Color(0x28000000),  // 93%
+                    Color(0x0A000000),  // 97%
+                    Colors.transparent, // 100%: Hoàn toàn trong suốt, hòa tan mượt mà vào nền kính
+                  ],
+                  stops: [0.0, 0.50, 0.60, 0.70, 0.78, 0.86, 0.93, 0.97, 1.0],
+                ).createShader(bounds);
+              },
+              blendMode: BlendMode.dstIn,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    'assets/images/senbank_hero_banner.jpg',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
                   ),
-                ),
+                  // Lớp phủ tối nhẹ chỉ ở nửa trên cho chữ, biến mất hoàn toàn ở nửa dưới
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.42),
+                          Colors.black.withOpacity(0.12),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.35, 0.62],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
 
             // 3. NỘI DUNG TÀI KHOẢN Ở NỬA TRÊN (Không che tòa nhà hay quảng trường)
             Positioned(
