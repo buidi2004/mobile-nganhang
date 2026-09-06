@@ -86,11 +86,11 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       final transactions = await TransactionRemoteDataSource().getTransactions(
         walletId: wallet.walletId,
-        size: 5,
+        size: 3,
       );
       if (mounted) {
         setState(() {
-          _recentTransactions = transactions;
+          _recentTransactions = transactions.take(3).toList();
           _isLoading = false;
         });
       }

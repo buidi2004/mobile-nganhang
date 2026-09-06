@@ -56,8 +56,9 @@ class TransactionRemoteDataSource {
     }
 
     final items = rawList.map((item) => _mapTransaction(Map<String, dynamic>.from(item as Map))).toList();
+    final finalItems = (data is List && items.length > size) ? items.take(size).toList() : items;
     return {
-      'items': items,
+      'items': finalItems,
       'isLast': isLast,
       'page': page,
       'totalElements': totalElements,
