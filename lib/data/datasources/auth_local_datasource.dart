@@ -7,6 +7,11 @@ abstract class AuthLocalDataSource {
   Future<String?> getAccessToken();
   Future<String?> getRefreshToken();
   Future<void> clearTokens();
+  Future<void> saveIdentity({required String userId, required String phoneNumber});
+  Future<void> saveFullName(String fullName);
+  Future<String?> getFullName();
+  Future<void> saveWalletId(String walletId);
+  Future<String?> getWalletId();
   Future<void> setHideBalance(bool hide);
   Future<bool> getHideBalance();
 }
@@ -37,11 +42,39 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     return await _secureStorage.read(key: AppConstants.keyRefreshToken);
   }
 
+
   @override
   Future<void> clearTokens() async {
     await _secureStorage.delete(key: AppConstants.keyAccessToken);
     await _secureStorage.delete(key: AppConstants.keyRefreshToken);
     await _secureStorage.delete(key: AppConstants.keyPinToken);
+    await _secureStorage.delete(key: AppConstants.keyWalletId);
+  }
+
+  @override
+  Future<void> saveIdentity({required String userId, required String phoneNumber}) async {
+    await _secureStorage.write(key: AppConstants.keyUserId, value: userId);
+    await _secureStorage.write(key: AppConstants.keyPhoneNumber, value: phoneNumber);
+  }
+
+  @override
+  Future<void> saveFullName(String fullName) async {
+    await _secureStorage.write(key: AppConstants.keyFullName, value: fullName);
+  }
+
+  @override
+  Future<String?> getFullName() async {
+    return await _secureStorage.read(key: AppConstants.keyFullName);
+  }
+
+  @override
+  Future<void> saveWalletId(String walletId) async {
+    await _secureStorage.write(key: AppConstants.keyWalletId, value: walletId);
+  }
+
+  @override
+  Future<String?> getWalletId() async {
+    return await _secureStorage.read(key: AppConstants.keyWalletId);
   }
 
   @override

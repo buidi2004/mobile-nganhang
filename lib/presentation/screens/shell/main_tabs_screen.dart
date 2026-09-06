@@ -25,21 +25,19 @@ class MainTabsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassScaffold(
-      contentAwareBrightness: true,
+      contentAwareBrightness: false,
       backgroundColor: Colors.transparent,
-      background: Image.asset(
-        'assets/images/glass_background_pattern.png',
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-      ),
       bottomBarHeight: 88,
-      bottomBar: FloatingGlassBottomBar(
-        selectedIndex: navigationShell.currentIndex,
-        onTabSelected: _onTabSelected,
-        onQuickActionPressed: () => _onQuickAction(context),
+      bottomBar: RepaintBoundary(
+        child: FloatingGlassBottomBar(
+          selectedIndex: navigationShell.currentIndex,
+          onTabSelected: _onTabSelected,
+          onQuickActionPressed: () => _onQuickAction(context),
+        ),
       ),
-      body: navigationShell,
+      body: RepaintBoundary(
+        child: navigationShell,
+      ),
     );
   }
 }

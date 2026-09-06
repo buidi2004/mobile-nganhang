@@ -1,8 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
+import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/auth_remote_datasource.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:sen_hong_bank/core/constants/app_constants.dart';
 
 class ForgotPinScreen extends StatefulWidget {
   const ForgotPinScreen({super.key});
@@ -19,16 +25,26 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
   bool _isConfirming = false;
   bool _isLoading = false;
 
-  void _verifyOtp() {
+  Future<void> _verifyOtp() async {
     if (_otpCtrl.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập đủ 6 số OTP xác minh')),
       );
       return;
     }
-    setState(() {
-      _currentStep = 2;
-    });
+    setState(() => _isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final phone = await const FlutterSecureStorage().read(key: AppConstants.keyPhoneNumber);
+      if (phone == null || phone.isEmpty) throw Exception('Thiếu số điện thoại xác minh');
+      final verified = await AuthRemoteDataSource(local: AuthLocalDataSourceImpl(prefs: prefs)).verifyOtp(phoneNumber: phone, otp: _otpCtrl.text);
+      if (!verified) throw Exception('OTP không hợp lệ');
+      if (mounted) setState(() => _currentStep = 2);
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _handleKeyPress(String value) {
@@ -36,9 +52,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
       if (_pin.length < 6) {
         setState(() => _pin += value);
         if (_pin.length == 6) {
-          Future.delayed(const Duration(milliseconds: 200), () {
-            setState(() => _isConfirming = true);
-          });
+          setState(() => _isConfirming = true);
         }
       }
     } else {
@@ -67,7 +81,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     });
   }
 
-  void _submitNewPin() {
+  Future<void> _submitNewPin() async {
     if (_pin != _confirmPin) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -84,13 +98,14 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     }
 
     setState(() => _isLoading = true);
-    Future.delayed(const Duration(milliseconds: 600), () {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await AuthRemoteDataSource(local: AuthLocalDataSourceImpl(prefs: prefs)).setPin(_pin);
       if (!mounted) return;
-      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: AppColors.emeraldGreen,
-          content: Text('Đặt lại mã PIN thành công!'),
+          content: Text('Cấp lại mã PIN mới thành công!'),
         ),
       );
       if (context.canPop()) {
@@ -98,72 +113,142 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
       } else {
         context.go('/settings/security');
       }
-    });
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Cấp Lại Mã PIN'),
         backgroundColor: Colors.transparent,
       ),
       body: SafeArea(
-        child: _currentStep == 1 ? _buildOtpStep() : _buildPinStep(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+          child: Column(
+            children: [
+              _currentStep == 1 ? _buildOtpStep() : _buildPinStep(),
+              const SizedBox(height: 20),
+
+              // Auth Navigation Router Hub
+              GlassCard(
+                quality: GlassQuality.minimal,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Column(
+                    children: [
+                      _buildRouterTile(
+                        icon: CupertinoIcons.arrow_counterclockwise_circle_fill,
+                        label: 'Quên mật khẩu đăng nhập? Khôi phục mật khẩu',
+                        onTap: () => context.push('/auth/forgot-password'),
+                      ),
+                      const Divider(height: 1, indent: 40, color: AppColors.cardBorderLight),
+                      _buildRouterTile(
+                        icon: CupertinoIcons.lock_shield_fill,
+                        label: 'Quay lại trang Thiết lập mã PIN',
+                        onTap: () => context.push('/auth/set-pin'),
+                      ),
+                      const Divider(height: 1, indent: 40, color: AppColors.cardBorderLight),
+                      _buildRouterTile(
+                        icon: CupertinoIcons.person_crop_circle_fill,
+                        label: 'Quay lại màn hình Đăng nhập',
+                        onTap: () => context.go('/auth/login'),
+                      ),
+                      const Divider(height: 1, indent: 40, color: AppColors.cardBorderLight),
+                      _buildRouterTile(
+                        icon: CupertinoIcons.person_badge_plus_fill,
+                        label: 'Chưa có tài khoản? Đăng ký ví mới',
+                        onTap: () => context.push('/auth/register'),
+                      ),
+                      const Divider(height: 1, indent: 40, color: AppColors.cardBorderLight),
+                      _buildRouterTile(
+                        icon: CupertinoIcons.person_crop_circle_badge_checkmark,
+                        label: 'Xác thực khuôn mặt eKYC để cấp lại PIN',
+                        onTap: () => context.push('/profile/ekyc'),
+                      ),
+                      const Divider(height: 1, indent: 40, color: AppColors.cardBorderLight),
+                      _buildRouterTile(
+                        icon: CupertinoIcons.doc_text_fill,
+                        label: 'Xem Điều khoản dịch vụ & Quy định bảo mật',
+                        onTap: () => context.push('/auth/terms'),
+                      ),
+                      const Divider(height: 1, indent: 40, color: AppColors.cardBorderLight),
+                      _buildRouterTile(
+                        icon: CupertinoIcons.phone_circle_fill,
+                        label: 'Hỗ trợ khách hàng 24/7 (Hotline 1900 6868)',
+                        onTap: () => context.push('/support/help-center'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildOtpStep() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Iconsax.shield_security, color: AppColors.primary, size: 36),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.12),
+              shape: BoxShape.circle,
             ),
+            child: const Icon(CupertinoIcons.lock_shield_fill, color: AppColors.primary, size: 36),
           ),
-          const SizedBox(height: 24),
-          Text('Xác minh danh tính', style: AppTypography.displaySmall(color: AppColors.textPrimaryDark)),
-          const SizedBox(height: 8),
-          Text(
-            'Hệ thống đã gửi mã xác thực OTP 6 số đến số điện thoại đăng ký tài khoản của bạn để xác thực yêu cầu cấp lại mã PIN.',
-            style: AppTypography.bodyMedium(color: AppColors.textSecondaryDark),
-          ),
-          const SizedBox(height: 32),
+        ),
+        const SizedBox(height: 20),
+        Text('Xác minh danh tính', style: AppTypography.displaySmall(color: AppColors.textPrimaryLight).copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        Text(
+          'Hệ thống đã gửi mã xác thực OTP 6 số đến số điện thoại đăng ký tài khoản của bạn để xác thực yêu cầu cấp lại mã PIN.',
+          style: AppTypography.bodyMedium(color: AppColors.textSecondaryLight),
+        ),
+        const SizedBox(height: 24),
 
-          Text('Mã OTP xác thực', style: AppTypography.titleMedium(color: AppColors.textPrimaryDark)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _otpCtrl,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            style: const TextStyle(color: AppColors.primaryLight, fontSize: 22, letterSpacing: 8, fontWeight: FontWeight.bold),
-            decoration: InputDecoration(
-              counterText: '',
-              hintText: '• • • • • •',
-              hintStyle: const TextStyle(color: AppColors.textMutedDark, letterSpacing: 6),
-              filled: true,
-              fillColor: AppColors.cardDark,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-            ),
+        Text('Mã OTP xác thực', style: AppTypography.titleMedium(color: AppColors.textPrimaryLight)),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _otpCtrl,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          style: const TextStyle(color: AppColors.primaryDark, fontSize: 22, letterSpacing: 8, fontWeight: FontWeight.bold),
+          decoration: InputDecoration(
+            counterText: '',
+            hintText: '• • • • • •',
+            hintStyle: const TextStyle(color: AppColors.textMutedLight, letterSpacing: 6),
+            filled: true,
+            fillColor: AppColors.surfaceLight,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.borderLight)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.borderLight)),
           ),
-          const Spacer(),
-          ElevatedButton(
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
             onPressed: _verifyOtp,
-            child: const Text('Xác nhận & Đặt lại PIN'),
+            child: const Text('Xác nhận OTP & Bước tiếp theo'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -171,17 +256,17 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
     final activeLength = _isConfirming ? _confirmPin.length : _pin.length;
     return Column(
       children: [
-        const SizedBox(height: 20),
+        const SizedBox(height: 10),
         Text(
           _isConfirming ? 'Xác nhận lại mã PIN mới' : 'Thiết lập mã PIN mới',
-          style: AppTypography.displaySmall(color: AppColors.textPrimaryDark),
+          style: AppTypography.displaySmall(color: AppColors.textPrimaryLight).copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
-          _isConfirming ? 'Nhập lại 6 chữ số để xác nhận' : 'Mã PIN gồm 6 số dùng để ký chuyển tiền',
-          style: AppTypography.bodyMedium(color: AppColors.textSecondaryDark),
+          _isConfirming ? 'Nhập lại 6 chữ số để hoàn tất xác thực' : 'Mã PIN gồm 6 số dùng để ký chuyển tiền & thanh toán',
+          style: AppTypography.bodyMedium(color: AppColors.textSecondaryLight),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
 
         // Dots
         Row(
@@ -196,80 +281,85 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                 shape: BoxShape.circle,
                 color: isFilled ? AppColors.primary : Colors.transparent,
                 border: Border.all(
-                  color: isFilled ? AppColors.primary : AppColors.textMutedDark,
+                  color: isFilled ? AppColors.primary : AppColors.textMutedLight,
                   width: 2,
                 ),
               ),
             );
           }),
         ),
+        const SizedBox(height: 28),
 
-        const Spacer(),
-
-        if (_isLoading)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: CircularProgressIndicator(color: AppColors.primary),
-          )
-        else
-          // Numpad
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-            child: Column(
-              children: [
-                _buildRow(['1', '2', '3']),
-                const SizedBox(height: 16),
-                _buildRow(['4', '5', '6']),
-                const SizedBox(height: 16),
-                _buildRow(['7', '8', '9']),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const SizedBox(width: 72, height: 72),
-                    _buildNumpadButton('0'),
-                    SizedBox(
-                      width: 72,
-                      height: 72,
-                      child: IconButton(
-                        icon: const Icon(Iconsax.arrow_left_2, color: Colors.white70, size: 28),
-                        onPressed: _handleBackspace,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+        // Custom Numpad Grid
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 16,
+            childAspectRatio: 1.6,
           ),
-        const SizedBox(height: 16),
+          itemCount: 12,
+          itemBuilder: (context, index) {
+            if (index == 9) return const SizedBox.shrink();
+            if (index == 11) {
+              return InkWell(
+                onTap: _handleBackspace,
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.borderLight),
+                  ),
+                  child: const Icon(CupertinoIcons.delete_left, color: AppColors.textPrimaryLight, size: 22),
+                ),
+              );
+            }
+            final digit = index == 10 ? '0' : '${index + 1}';
+            return InkWell(
+              onTap: () => _handleKeyPress(digit),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.borderLight),
+                ),
+                child: Center(
+                  child: Text(
+                    digit,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+
+        if (_isLoading) ...[
+          const SizedBox(height: 16),
+          const CircularProgressIndicator(),
+        ],
       ],
     );
   }
 
-  Widget _buildRow(List<String> values) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: values.map((v) => _buildNumpadButton(v)).toList(),
-    );
-  }
-
-  Widget _buildNumpadButton(String value) {
+  Widget _buildRouterTile({required IconData icon, required String label, required VoidCallback onTap}) {
     return InkWell(
-      onTap: () => _handleKeyPress(value),
-      borderRadius: BorderRadius.circular(36),
-      child: Container(
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          color: AppColors.cardDark,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.cardBorderDark),
-        ),
-        child: Center(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.primary, size: 18),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label, style: AppTypography.bodySmall(color: AppColors.textPrimaryLight).copyWith(fontWeight: FontWeight.w600, fontSize: 12)),
+            ),
+            const Icon(CupertinoIcons.chevron_forward, color: AppColors.textMutedLight, size: 14),
+          ],
         ),
       ),
     );

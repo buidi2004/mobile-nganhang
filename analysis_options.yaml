@@ -4,6 +4,8 @@ analyzer:
     - android/**
     - ios/**
     - web/**
+    - scratch/**
+    - bin/**
   errors:
     deprecated_member_use: ignore
 include: package:flutter_lints/flutter.yaml

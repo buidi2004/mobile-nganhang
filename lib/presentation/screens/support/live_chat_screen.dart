@@ -12,12 +12,20 @@ class LiveChatScreen extends StatefulWidget {
 class _LiveChatScreenState extends State<LiveChatScreen> {
   final TextEditingController _msgCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
+  bool _isAgentTyping = false;
+
+  @override
+  void dispose() {
+    _msgCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
 
   final List<Map<String, dynamic>> _messages = [
     {
       'sender': 'agent',
       'name': 'CSKH Sen Hồng (Thu Hằng)',
-      'text': 'Xin chào quý khách BÙI ĐỨC VƯƠNG! Em là chuyên viên hỗ trợ trực tuyến 24/7 của Ví Sen Hồng. Em có thể hỗ trợ gì cho quý khách ạ?',
+      'text': 'Xin chào quý khách! Em là chuyên viên hỗ trợ trực tuyến 24/7 của Ví Sen Hồng. Em có thể hỗ trợ gì cho quý khách ạ?',
       'time': '10:30',
     },
     {
@@ -49,15 +57,17 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
         'text': text.trim(),
         'time': 'Vừa xong',
       });
+      _isAgentTyping = true;
       _msgCtrl.clear();
     });
 
     _scrollToBottom();
 
     // Auto agent reply simulation
-    Future.delayed(const Duration(milliseconds: 900), () {
+    Future.delayed(const Duration(milliseconds: 1200), () {
       if (!mounted) return;
       setState(() {
+        _isAgentTyping = false;
         _messages.add({
           'sender': 'agent',
           'name': 'CSKH Sen Hồng (Thu Hằng)',
@@ -84,7 +94,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Row(
           children: [
@@ -120,9 +130,52 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
             Expanded(
               child: ListView.builder(
                 controller: _scrollCtrl,
+                physics: const AlwaysScrollableScrollPhysics(),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.all(16),
-                itemCount: _messages.length,
+                itemCount: _messages.length + (_isAgentTyping ? 1 : 0),
                 itemBuilder: (context, idx) {
+                  if (idx == _messages.length) {
+                    return Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
+                            bottomRight: Radius.circular(16),
+                            bottomLeft: Radius.circular(4),
+                          ),
+                          border: Border.all(color: AppColors.borderLight),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Thu Hằng đang soạn phản hồi',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight, fontStyle: FontStyle.italic),
+                            ),
+                            SizedBox(width: 8),
+                            SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                   final msg = _messages[idx];
                   final isUser = msg['sender'] == 'user';
                   return Align(
@@ -133,23 +186,21 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         gradient: isUser ? AppColors.primaryGradient : null,
-                        color: isUser ? null : AppColors.cardDark,
+                        color: isUser ? null : Colors.white,
                         borderRadius: BorderRadius.only(
                           topLeft: const Radius.circular(16),
                           topRight: const Radius.circular(16),
                           bottomLeft: Radius.circular(isUser ? 16 : 4),
                           bottomRight: Radius.circular(isUser ? 4 : 16),
                         ),
-                        border: isUser ? null : Border.all(color: AppColors.cardBorderDark),
-                        boxShadow: isUser
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.bottomBarGlow.withOpacity(0.25),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                )
-                              ]
-                            : null,
+                        border: isUser ? null : Border.all(color: AppColors.borderLight),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(isUser ? 0.15 : 0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -157,16 +208,20 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                           if (!isUser)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 4),
-                              child: Text(msg['name']!, style: const TextStyle(fontSize: 11, color: AppColors.primaryLight, fontWeight: FontWeight.bold)),
+                              child: Text(msg['name']!, style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)),
                             ),
                           Text(
                             msg['text']!,
-                            style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.35),
+                            style: TextStyle(
+                              color: isUser ? Colors.white : AppColors.textPrimaryLight,
+                              fontSize: 14,
+                              height: 1.35,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             msg['time']!,
-                            style: TextStyle(color: isUser ? Colors.white70 : AppColors.textMutedDark, fontSize: 10),
+                            style: TextStyle(color: isUser ? Colors.white70 : AppColors.textMutedLight, fontSize: 10),
                           ),
                         ],
                       ),
@@ -185,8 +240,9 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ActionChip(
-                      backgroundColor: AppColors.cardDark,
-                      label: Text(qr, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: AppColors.borderLight),
+                      label: Text(qr, style: const TextStyle(color: AppColors.textPrimaryLight, fontSize: 12, fontWeight: FontWeight.w500)),
                       onPressed: () => _sendMessage(qr),
                     ),
                   );
@@ -198,30 +254,39 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               decoration: const BoxDecoration(
-                color: AppColors.cardDark,
-                border: Border(top: BorderSide(color: AppColors.cardBorderDark)),
+                color: Colors.white,
+                border: Border(top: BorderSide(color: AppColors.borderLight)),
               ),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(CupertinoIcons.paperclip, color: AppColors.primaryLight),
-                    onPressed: () {},
+                    icon: const Icon(CupertinoIcons.paperclip, color: AppColors.primary),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đã chọn tệp đính kèm hóa đơn/biên lai'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
                   ),
                   Expanded(
                     child: TextField(
                       controller: _msgCtrl,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: AppColors.textPrimaryLight),
                       decoration: InputDecoration(
                         hintText: 'Nhập tin nhắn hỗ trợ...',
-                        hintStyle: const TextStyle(color: AppColors.textMutedDark),
+                        hintStyle: const TextStyle(color: AppColors.textMutedLight),
                         filled: true,
-                        fillColor: const Color(0xFF1E293B),
+                        fillColor: AppColors.surfaceLight,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: const BorderSide(color: AppColors.borderLight)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: const BorderSide(color: AppColors.borderLight)),
                       ),
                       onSubmitted: _sendMessage,
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     decoration: BoxDecoration(
                       gradient: AppColors.primaryGradient,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'app_colors.dart';
+import '../../presentation/routes/smooth_page_transitions_builder.dart';
 
 class AppTheme {
   AppTheme._();
@@ -49,6 +50,16 @@ class AppTheme {
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
         ),
       ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.iOS: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.windows: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.macOS: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.linux: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: SmoothFintechPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 
@@ -95,6 +106,16 @@ class AppTheme {
           shadowColor: AppColors.bottomBarGlow.withOpacity(0.45),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.3),
         ),
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.iOS: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.windows: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.macOS: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.linux: SmoothFintechPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: SmoothFintechPageTransitionsBuilder(),
+        },
       ),
     );
   }

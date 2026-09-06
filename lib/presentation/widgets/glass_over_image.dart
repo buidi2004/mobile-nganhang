@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 
 /// Widget tổng quát triển khai kiến trúc kính 3 lớp độc lập (3-Tier Sibling Stack Architecture):
 ///
@@ -148,7 +149,7 @@ class GlassOverImage extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         errorBuilder: (context, error, stackTrace) => Container(
-          color: const Color(0xFF1E293B),
+          color: AppColors.cardDark,
         ),
       );
     }
@@ -159,12 +160,12 @@ class GlassOverImage extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         errorBuilder: (context, error, stackTrace) => Container(
-          color: const Color(0xFF1E293B),
+          color: AppColors.cardDark,
         ),
       );
     }
     return Container(
-      color: const Color(0xFF1E293B),
+      color: AppColors.cardDark,
     );
   }
 

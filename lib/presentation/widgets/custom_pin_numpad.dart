@@ -1,5 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:flutter/services.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 
@@ -21,12 +22,14 @@ class CustomPinNumpad extends StatelessWidget {
 
   void _onKeyPress(String val) {
     if (pin.length < maxDigits) {
+      HapticFeedback.selectionClick();
       onPinChanged(pin + val);
     }
   }
 
   void _onBackspace() {
     if (pin.isNotEmpty) {
+      HapticFeedback.selectionClick();
       onPinChanged(pin.substring(0, pin.length - 1));
     }
   }
@@ -84,13 +87,13 @@ class CustomPinNumpad extends StatelessWidget {
                 children: [
                   showBiometric
                       ? _buildSpecialButton(
-                          icon: Iconsax.finger_scan,
+                          icon: CupertinoIcons.viewfinder_circle_fill,
                           onPressed: onBiometricPressed,
                         )
                       : const SizedBox(width: 72, height: 72),
                   _buildNumberButton('0'),
                   _buildSpecialButton(
-                    icon: Iconsax.arrow_left_2,
+                    icon: CupertinoIcons.delete_left_fill,
                     onPressed: _onBackspace,
                   ),
                 ],

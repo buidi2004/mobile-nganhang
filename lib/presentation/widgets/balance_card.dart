@@ -16,6 +16,8 @@ class BalanceCard extends StatelessWidget {
   final VoidCallback onTransfer;
   final VoidCallback onQr;
 
+  final String? accountNumber;
+
   const BalanceCard({
     super.key,
     required this.balance,
@@ -25,14 +27,15 @@ class BalanceCard extends StatelessWidget {
     required this.onWithdraw,
     required this.onTransfer,
     required this.onQr,
+    this.accountNumber,
   });
 
-  static const String _accountNumber = '1088 6688 9999';
+  // Cache formatter — tạo một lần, dùng lại mọi lần build
+  static final _currencyFormatter = NumberFormat('#,###', 'vi_VN');
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat('#,###', 'vi_VN');
-    final displayAmount = isHidden ? '••••••••' : currencyFormatter.format(balance);
+    final displayAmount = isHidden ? '••••••••' : _currencyFormatter.format(balance);
 
     return Container(
       decoration: BoxDecoration(
@@ -158,7 +161,7 @@ class BalanceCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Image.asset(
-                              'assets/icons/senbank_logo.png',
+                              'assets/icons/senbank_lotus_isolated.png',
                               width: 14,
                               height: 14,
                             ),
@@ -194,7 +197,9 @@ class BalanceCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       InkWell(
                         onTap: () {
-                          Clipboard.setData(const ClipboardData(text: '108866889999'));
+                          final numToCopy = (accountNumber != null && accountNumber!.isNotEmpty) ? accountNumber! : '';
+                          if (numToCopy.isEmpty) return;
+                          Clipboard.setData(ClipboardData(text: numToCopy));
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Row(
@@ -202,7 +207,7 @@ class BalanceCard extends StatelessWidget {
                                   const Icon(CupertinoIcons.checkmark_alt_circle_fill, color: Colors.white),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Đã sao chép số tài khoản: $_accountNumber',
+                                    'Đã sao chép số tài khoản: $numToCopy',
                                     style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                                   ),
                                 ],
@@ -225,7 +230,7 @@ class BalanceCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                _accountNumber,
+                                (accountNumber != null && accountNumber!.isNotEmpty) ? accountNumber! : 'Ví Sen Hồng',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: Colors.white,
                                   fontSize: 13,

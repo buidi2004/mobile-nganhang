@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'user_avatar_widget.dart';
 
 /// Header Lễ hội SenBank:
 /// - Toàn bộ thông tin tài khoản (Lời chào, STK, Chip EMV, Số dư 12.580.000 VND) hiển thị trên banner
@@ -16,7 +17,10 @@ class VietnamHeroHeader extends StatelessWidget {
   final VoidCallback? onTransfer;
   final VoidCallback? onQr;
   final VoidCallback? onNotificationTap;
+  final VoidCallback? onSearchTap;
   final VoidCallback? onProfileTap;
+  final String displayName;
+  final String accountNumber;
 
   const VietnamHeroHeader({
     super.key,
@@ -28,17 +32,19 @@ class VietnamHeroHeader extends StatelessWidget {
     this.onTransfer,
     this.onQr,
     this.onNotificationTap,
+    this.onSearchTap,
     this.onProfileTap,
+    this.displayName = '',
+    this.accountNumber = '',
   });
-
-  static const String _accountNumber = '1088 6688 9999';
+  // Cache formatter — tạo một lần, dùng lại mọi lần build
+  static final _currencyFormatter = NumberFormat('#,###', 'vi_VN');
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
-    final currencyFormatter = NumberFormat('#,###', 'vi_VN');
-    final displayAmount = isHidden ? '••••••••' : currencyFormatter.format(balance);
-    final bannerHeight = 280.0 + topPadding;
+    final displayAmount = isHidden ? '••••••••' : _currencyFormatter.format(balance);
+    final bannerHeight = 355.0 + topPadding;
 
     return SizedBox(
       height: bannerHeight,
@@ -103,43 +109,90 @@ class VietnamHeroHeader extends StatelessWidget {
             // 3. NỘI DUNG TÀI KHOẢN Ở NỬA TRÊN (Không che tòa nhà hay quảng trường)
             Positioned(
               top: topPadding + 10,
-              left: 20,
-              right: 20,
+              left: 14,
+              right: 14,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // HÀNG 1: LỜI CHÀO & AVATAR & THÔNG BÁO
+                  // HÀNG 1: THÔNG BÁO & TÌM KIẾM (TRÁI) & LỜI CHÀO + AVATAR (PHẢI)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Cụm Nút chuông thông báo & Tìm kiếm (bên trái)
+                      Row(
+                        children: [
+                          Stack(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.black.withOpacity(0.25),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: IconButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: onNotificationTap,
+                                  icon: const Icon(
+                                    CupertinoIcons.bell_fill,
+                                    color: Colors.white,
+                                    size: 19,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                right: 3,
+                                top: 3,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFEF4444),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withOpacity(0.25),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: onSearchTap,
+                              icon: const Icon(
+                                CupertinoIcons.search,
+                                color: Colors.white,
+                                size: 19,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Cụm Lời chào & Avatar (sát lề phải)
                       InkWell(
                         onTap: onProfileTap,
                         borderRadius: BorderRadius.circular(24),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFFFFD54F),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: const CircleAvatar(
-                                radius: 19,
-                                backgroundColor: Colors.white24,
-                                child: Icon(
-                                  CupertinoIcons.person_fill,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
                             Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
                                   'Xin chào,',
@@ -150,7 +203,7 @@ class VietnamHeroHeader extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  'BÙI ĐỨC VƯƠNG',
+                                  displayName.isEmpty ? 'Chưa có thông tin' : displayName,
                                   style: GoogleFonts.plusJakartaSans(
                                     color: Colors.white,
                                     fontSize: 15,
@@ -167,47 +220,15 @@ class VietnamHeroHeader extends StatelessWidget {
                                 ),
                               ],
                             ),
+                            const SizedBox(width: 10),
+                            const UserAvatarWidget(
+                              radius: 19,
+                              borderColor: Color(0xFFFFD54F),
+                              borderWidth: 1.5,
+                              showBorder: true,
+                            ),
                           ],
                         ),
-                      ),
-
-                      // Nút chuông thông báo
-                      Stack(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.black.withOpacity(0.25),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                                width: 0.8,
-                              ),
-                            ),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              onPressed: onNotificationTap,
-                              icon: const Icon(
-                                CupertinoIcons.bell_fill,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: 4,
-                            top: 4,
-                            child: Container(
-                              width: 9,
-                              height: 9,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFEF4444),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
@@ -276,7 +297,7 @@ class VietnamHeroHeader extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Image.asset(
-                              'assets/icons/senbank_logo.png',
+                              'assets/icons/senbank_lotus_isolated.png',
                               width: 14,
                               height: 14,
                             ),
@@ -312,7 +333,8 @@ class VietnamHeroHeader extends StatelessWidget {
                       const SizedBox(width: 6),
                       InkWell(
                         onTap: () {
-                          Clipboard.setData(const ClipboardData(text: '108866889999'));
+                          if (accountNumber.isEmpty) return;
+                          Clipboard.setData(ClipboardData(text: accountNumber));
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Row(
@@ -320,7 +342,7 @@ class VietnamHeroHeader extends StatelessWidget {
                                   const Icon(CupertinoIcons.checkmark_alt_circle_fill, color: Colors.white),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Đã sao chép STK: $_accountNumber',
+                                    'Đã sao chép STK: $accountNumber',
                                     style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                                   ),
                                 ],
@@ -347,7 +369,7 @@ class VietnamHeroHeader extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                _accountNumber,
+                                accountNumber.isEmpty ? 'Chưa có số tài khoản' : accountNumber,
                                 style: GoogleFonts.plusJakartaSans(
                                   color: Colors.white,
                                   fontSize: 13,
@@ -437,6 +459,7 @@ class VietnamHeroHeader extends StatelessWidget {
                       ),
                     ],
                   ),
+
                 ],
               ),
             ),

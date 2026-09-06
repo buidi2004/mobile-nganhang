@@ -1,157 +1,664 @@
+import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
+import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/auth_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
+import 'package:sen_hong_bank/core/network/push_notification_service.dart';
+import 'package:sen_hong_bank/core/network/permission_service.dart';
+import 'package:sen_hong_bank/core/network/realtime_notification_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:sen_hong_bank/core/constants/app_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool sessionExpired;
+  final String? expiredMessage;
+
+  const LoginScreen({
+    super.key,
+    this.sessionExpired = false,
+    this.expiredMessage,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _phoneController = TextEditingController(text: '0901234567');
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _rememberMe = true;
+  bool _isMaskedUser = false;
+  String _accountName = '';
+  bool _isLoading = false;
+  late bool _showExpiredBanner;
+
+  @override
+  void initState() {
+    super.initState();
+    _showExpiredBanner = widget.sessionExpired;
+    _loadSavedUser();
+
+    if (widget.sessionExpired) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showSessionExpiredDialog();
+        }
+      });
+    }
+  }
+
+  void _showSessionExpiredDialog() {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogCtx) => PopScope(
+        canPop: true,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.warningBg,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.warningBorder),
+                ),
+                child: const Icon(
+                  CupertinoIcons.lock_shield_fill,
+                  color: AppColors.warningText,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Yêu Cầu Đăng Nhập',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                    color: AppColors.textPrimaryLight,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.expiredMessage ??
+                    'Phiên đăng nhập bảo mật (JWT) của Quý khách đã hết hạn. Vui lòng đăng nhập lại để tiếp tục sử dụng các dịch vụ tài chính.',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondaryLight,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.warningBg,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.warningBorder),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(CupertinoIcons.exclamationmark_triangle_fill, color: AppColors.warningText, size: 18),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Thông tin đăng nhập đã được ghi nhớ an toàn. Quý khách chỉ cần nhập lại Mật khẩu.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.warningText,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Đăng nhập ngay',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _loadSavedUser() async {
+    try {
+      const storage = FlutterSecureStorage();
+      final savedPhone = await storage.read(key: AppConstants.keyPhoneNumber);
+      final savedName = await storage.read(key: AppConstants.keyFullName);
+      if (savedPhone != null && savedPhone.isNotEmpty) {
+        _phoneController.text = savedPhone;
+        if (mounted) {
+          setState(() {
+            _isMaskedUser = true;
+            _accountName = (savedName != null && savedName.isNotEmpty) ? savedName : 'Quý khách';
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _login() async {
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập số điện thoại')),
+      );
+      return;
+    }
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập mật khẩu')),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final local = AuthLocalDataSourceImpl(prefs: prefs);
+      await AuthRemoteDataSource(local: local).login(
+        phoneNumber: _phoneController.text.trim(),
+        password: _passwordController.text,
+        deviceId: 'flutter-${DateTime.now().millisecondsSinceEpoch}',
+      );
+
+      // Lưu hoặc xóa thông tin ghi nhớ
+      const storage = FlutterSecureStorage();
+      if (_rememberMe) {
+        await storage.write(key: AppConstants.keyPhoneNumber, value: _phoneController.text.trim());
+      } else {
+        await storage.delete(key: AppConstants.keyPhoneNumber);
+        await storage.delete(key: AppConstants.keyFullName);
+      }
+
+      // Đồng bộ FCM token với backend khi đăng nhập thành công
+      final fcmToken = PushNotificationService().fcmToken;
+      if (fcmToken != null && fcmToken.isNotEmpty) {
+        unawaited(PushNotificationService().syncDeviceTokenToBackend(fcmToken));
+      }
+
+      // Bước 1 & 2: Lấy walletId và kết nối WebSocket với đúng topic /topic/wallets/{walletId}/notifications
+      try {
+        final wallet = await WalletRemoteDataSource().getMyWallet();
+        final accessToken = await local.getAccessToken();
+        if (accessToken != null && accessToken.isNotEmpty) {
+          unawaited(RealtimeNotificationService().connect(
+            walletId: wallet.walletId,
+            accessToken: accessToken,
+          ));
+        }
+      } catch (_) {}
+
+      // Xin cấp quyền hệ thống (Camera, Thông báo) sau khi người dùng đã đăng nhập thành công
+      unawaited(PermissionService().requestAllAppPermissions());
+
+      if (mounted) context.go('/');
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _switchAccount() {
+    setState(() {
+      _isMaskedUser = false;
+      _accountName = '';
+      _phoneController.clear();
+      _passwordController.clear();
+    });
+  }
+
+  void _cycleWallpaper() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đã đổi hình nền nghệ thuật phong cách Sen Hồng!'),
+        duration: Duration(milliseconds: 1000),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        leading: Navigator.of(context).canPop()
+            ? IconButton(
+                icon: const Icon(CupertinoIcons.chevron_back, color: AppColors.textPrimaryLight),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+        actions: [
+          IconButton(
+            tooltip: 'Đổi hình nền app',
+            icon: const Icon(CupertinoIcons.paintbrush_fill, color: AppColors.primary),
+            onPressed: _cycleWallpaper,
+          ),
+          IconButton(
+            tooltip: 'Tổng đài hỗ trợ CSKH',
+            icon: const Icon(CupertinoIcons.phone_circle_fill, color: AppColors.primary),
+            onPressed: () => context.push('/support/help-center'),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (Navigator.of(context).canPop())
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.centerLeft,
-                  icon: const Icon(Iconsax.arrow_left_2, color: Colors.white),
-                  onPressed: () => Navigator.of(context).pop(),
-                )
-              else
-                const SizedBox(height: 16),
               Center(
                 child: Container(
-                  width: 72,
-                  height: 72,
+                  width: 86,
+                  height: 86,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.bottomBarCyan.withOpacity(0.25),
-                        AppColors.bottomBarOcean.withOpacity(0.15),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.bottomBarCyan, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.bottomBarGlow.withOpacity(0.35),
-                        blurRadius: 16,
+                        color: AppColors.bottomBarGlow.withOpacity(0.30),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: const Icon(Iconsax.shield_security, color: AppColors.bottomBarCyan, size: 36),
+                  padding: const EdgeInsets.all(8),
+                  child: ClipOval(
+                    child: Image.asset('assets/icons/senbank_logo.png', fit: BoxFit.contain),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Text('SENBANK', style: AppTypography.displaySmall(color: AppColors.primaryDark).copyWith(fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              ),
+              Center(
+                child: Text('Ngân Hàng Số & Ví Điện Tử Tài Chính', style: AppTypography.bodySmall(color: AppColors.textSecondaryLight)),
+              ),
+              const SizedBox(height: 20),
+
+              // Banner thông báo yêu cầu đăng nhập khi hết hạn JWT
+              if (_showExpiredBanner)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.warningBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.warningBorder, width: 1.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.warningText.withOpacity(0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          CupertinoIcons.lock_shield_fill,
+                          color: AppColors.warningText,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Yêu Cầu Đăng Nhập Lại',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.warningText,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              widget.expiredMessage ??
+                                  'Phiên làm việc bảo mật (JWT) đã hết hạn. Quý khách vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ.',
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                color: AppColors.textPrimaryLight,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => setState(() => _showExpiredBanner = false),
+                        child: const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Icon(
+                            CupertinoIcons.xmark_circle_fill,
+                            color: AppColors.textSecondaryLight,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Remembered User Greeting Card
+              if (_isMaskedUser)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.borderLight),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: AppColors.primary.withOpacity(0.12),
+                        child: const Icon(CupertinoIcons.person_fill, color: AppColors.primary, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Xin chào, ${_accountName.isNotEmpty ? _accountName : 'Quý khách'}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: AppColors.primaryDark),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Tài khoản Sen Hồng Bank',
+                              style: TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _switchAccount,
+                        child: const Text('Đổi tài khoản', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      ),
+                    ],
+                  ),
+                ),
+
+              Text('Đăng nhập', style: AppTypography.displayMedium(color: AppColors.textPrimaryLight).copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(
+                _isMaskedUser
+                    ? 'Vui lòng nhập mật khẩu để tiếp tục sử dụng'
+                    : 'Chào mừng bạn quay trở lại với Sen Hồng',
+                style: AppTypography.bodyMedium(color: AppColors.textSecondaryLight),
+              ),
+              const SizedBox(height: 18),
+
+              // Anti-phishing fraud alert banner
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.warningBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.warningBorder),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(CupertinoIcons.shield_lefthalf_fill, color: AppColors.accentGold, size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'CẢNH BÁO: Không đăng nhập qua đường link lạ. Ngân hàng KHÔNG BAO GIỜ gọi điện yêu cầu OTP/mật khẩu.',
+                        style: TextStyle(color: AppColors.warningText, fontSize: 11, height: 1.3),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
-              Center(
-                child: Text('SEN HỒNG BANK', style: AppTypography.displaySmall(color: AppColors.primaryLight)),
-              ),
-              Center(
-                child: Text('Ví Điện Tử Tài Chính Số', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
-              ),
-              const SizedBox(height: 40),
 
-              Text('Đăng nhập', style: AppTypography.displayMedium(color: AppColors.textPrimaryDark)),
-              const SizedBox(height: 8),
-              Text('Chào mừng bạn quay trở lại với Sen Hồng', style: AppTypography.bodyMedium(color: AppColors.textSecondaryDark)),
-              const SizedBox(height: 28),
-
-              // Phone Field
-              TextField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Số điện thoại',
-                  labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-                  prefixIcon: const Icon(Iconsax.call, color: AppColors.primary),
-                  filled: true,
-                  fillColor: AppColors.cardDark,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+              // Phone Field - Chỉ hiển thị khi chưa có tài khoản ghi nhớ hoặc người dùng muốn đổi tài khoản
+              if (!_isMaskedUser) ...[
+                TextField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(color: AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.w600),
+                  decoration: InputDecoration(
+                    labelText: 'Số điện thoại',
+                    labelStyle: const TextStyle(color: AppColors.textSecondaryLight),
+                    prefixIcon: const Icon(CupertinoIcons.phone_fill, color: AppColors.primary),
+                    filled: true,
+                    fillColor: AppColors.surfaceLight,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.borderLight)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 14),
+              ],
 
               // Password Field
               TextField(
                 controller: _passwordController,
+                autofocus: _isMaskedUser,
                 obscureText: _obscurePassword,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.textPrimaryLight, fontSize: 16, fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
                   labelText: 'Mật khẩu',
-                  labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-                  prefixIcon: const Icon(Iconsax.lock_1, color: AppColors.primary),
+                  labelStyle: const TextStyle(color: AppColors.textSecondaryLight),
+                  prefixIcon: const Icon(CupertinoIcons.lock_fill, color: AppColors.primary),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword ? Iconsax.eye_slash : Iconsax.eye, color: AppColors.textSecondaryDark),
+                    icon: Icon(_obscurePassword ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye_fill, color: AppColors.textSecondaryLight),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   filled: true,
-                  fillColor: AppColors.cardDark,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                  fillColor: AppColors.surfaceLight,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.borderLight)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.borderLight)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => context.push('/auth/forgot-password'),
-                  child: const Text('Quên mật khẩu?', style: TextStyle(color: AppColors.primaryLight)),
-                ),
+              // Remember Me Checkbox & Forgot actions row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (!_isMaskedUser)
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: Checkbox(
+                            value: _rememberMe,
+                            activeColor: AppColors.primary,
+                            onChanged: (v) => setState(() => _rememberMe = v ?? true),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text('Ghi nhớ tài khoản', style: AppTypography.bodySmall(color: AppColors.textSecondaryLight)),
+                      ],
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => context.push('/auth/forgot-pin'),
+                        child: const Text('Quên PIN', style: TextStyle(color: AppColors.textSecondaryLight, fontSize: 12, fontWeight: FontWeight.w600)),
+                      ),
+                      const Text('•', style: TextStyle(color: AppColors.textMutedLight)),
+                      TextButton(
+                        onPressed: () => context.push('/auth/forgot-password'),
+                        child: const Text('Quên mật khẩu?', style: TextStyle(color: AppColors.primaryDark, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Login Button
-              ElevatedButton(
-                onPressed: () => context.go('/'),
-                child: const Text('Đăng nhập'),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Đăng nhập'),
+                ),
               ),
               const SizedBox(height: 16),
 
               // Biometric Option
               Center(
                 child: IconButton(
-                  onPressed: () => context.go('/'),
-                  iconSize: 52,
-                  icon: const Icon(Iconsax.finger_scan, color: AppColors.emeraldGreen),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vui lòng đăng nhập bằng Mật khẩu lần đầu để kích hoạt FaceID / Vân tay an toàn.'),
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  },
+                  iconSize: 48,
+                  icon: const Icon(CupertinoIcons.viewfinder_circle_fill, color: AppColors.emeraldGreen),
                   tooltip: 'Đăng nhập sinh trắc học FaceID / Vân tay',
                 ),
               ),
               Center(
-                child: Text('Đăng nhập bằng FaceID / Vân tay', style: AppTypography.bodySmall(color: AppColors.textSecondaryDark)),
+                child: Text('Đăng nhập nhanh bằng FaceID / Vân tay', style: AppTypography.bodySmall(color: AppColors.textSecondaryLight)),
               ),
+              const SizedBox(height: 20),
 
-              const SizedBox(height: 40),
+              // Register CTA Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Chưa có tài khoản ví?', style: AppTypography.bodyMedium(color: AppColors.textSecondaryDark)),
+                  Text('Chưa có tài khoản ví?', style: AppTypography.bodyMedium(color: AppColors.textSecondaryLight)),
                   TextButton(
                     onPressed: () => context.push('/auth/register'),
-                    child: const Text('Đăng ký ngay', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                    child: const Text('Đăng ký ngay', style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+
+              // Quick Router Hub Card
+              GlassCard(
+                quality: GlassQuality.minimal,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Column(
+                    children: [
+                      _buildRouterTile(
+                        icon: CupertinoIcons.lock_shield_fill,
+                        label: 'Chưa kích hoạt mã PIN? Thiết lập PIN',
+                        onTap: () => context.push('/auth/set-pin'),
+                      ),
+                      const Divider(height: 1, indent: 40, color: AppColors.cardBorderLight),
+                      _buildRouterTile(
+                        icon: CupertinoIcons.number_circle_fill,
+                        label: 'Xác thực mã OTP đăng nhập / kích hoạt',
+                        onTap: () => context.push('/auth/otp'),
+                      ),
+                      const Divider(height: 1, indent: 40, color: AppColors.cardBorderLight),
+                      _buildRouterTile(
+                        icon: CupertinoIcons.doc_text_fill,
+                        label: 'Điều khoản dịch vụ & Chính sách bảo mật',
+                        onTap: () => context.push('/auth/terms'),
+                      ),
+                      const Divider(height: 1, indent: 40, color: AppColors.cardBorderLight),
+                      _buildRouterTile(
+                        icon: CupertinoIcons.phone_circle_fill,
+                        label: 'Trung tâm trợ giúp & CSKH 24/7 (1900 6868)',
+                        onTap: () => context.push('/support/help-center'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRouterTile({required IconData icon, required String label, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.primary, size: 18),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label, style: AppTypography.bodySmall(color: AppColors.textPrimaryLight).copyWith(fontWeight: FontWeight.w600, fontSize: 12)),
+            ),
+            const Icon(CupertinoIcons.chevron_forward, color: AppColors.textMutedLight, size: 14),
+          ],
         ),
       ),
     );

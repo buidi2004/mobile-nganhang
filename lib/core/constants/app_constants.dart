@@ -9,6 +9,9 @@ class AppConstants {
   static const String keyRefreshToken = 'refresh_token';
   static const String keyUserId = 'user_id';
   static const String keyPhoneNumber = 'phone_number';
+  static const String keyFullName = 'full_name';
+  static const String keyWalletId = 'wallet_id';
+  static const String keyAvatarUrl = 'avatar_url';
   static const String keyPinToken = 'pin_token';
   static const String keyBiometricEnabled = 'biometric_enabled';
   static const String keyHideBalance = 'hide_balance';

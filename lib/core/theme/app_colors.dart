@@ -25,6 +25,10 @@ class AppColors {
   static const Color bgSurfaceLight = Color(0xCCFFFFFF);
   static const Color cardLight = Color(0xD9FFFFFF);
   static const Color cardBorderLight = Color(0x66FFFFFF);
+  static const Color borderLight = Color(0xFFE2E8F0);
+  static const Color borderSubtle = Color(0xFFCBD5E1);
+  static const Color surfaceLight = Color(0xFFF8FAFC);
+  static const Color dividerLight = Color(0xFFF1F5F9);
 
   // Backgrounds & Surface (Dark Mode Fintech)
   static const Color bgDark = Colors.transparent;
@@ -43,6 +47,27 @@ class AppColors {
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
   static const Color info = Color(0xFF00B4D8);
+
+  // Status Surfaces & Accents (Thông báo, Cảnh báo, Trạng thái chuẩn hệ thống)
+  static const Color warningBg = Color(0xFFFFFBEB);
+  static const Color warningBorder = Color(0xFFFDE68A);
+  static const Color warningText = Color(0xFFB45309);
+
+  static const Color errorBg = Color(0xFFFEF2F2);
+  static const Color errorBorder = Color(0xFFFECACA);
+  static const Color errorText = Color(0xFFB91C1C);
+
+  static const Color successBg = Color(0xFFF0FDF4);
+  static const Color successBorder = Color(0xFFBBF7D0);
+  static const Color successText = Color(0xFF15803D);
+
+  static const Color infoBg = Color(0xFFEFF6FF);
+  static const Color infoBorder = Color(0xFFBFDBFE);
+  static const Color infoText = Color(0xFF1D4ED8);
+
+  static const Color infoTealBg = Color(0xFFF0FDFA);
+  static const Color infoTealBorder = Color(0xFF99F6E4);
+  static const Color infoTealText = Color(0xFF0F766E);
 
   // Text Colors (Light Mode)
   static const Color textPrimaryLight = Color(0xFF0F172A);

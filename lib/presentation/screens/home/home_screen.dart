@@ -1,9 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sen_hong_bank/core/constants/app_constants.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
+import 'package:sen_hong_bank/data/datasources/remote/profile_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/transaction_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
 import 'package:sen_hong_bank/presentation/widgets/curved_promo_banner.dart';
 import 'package:sen_hong_bank/presentation/widgets/vietnam_hero_header.dart';
 
@@ -16,60 +21,113 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _hideBalance = false;
-  final double _balance = 12580000;
+  double _balance = 0;
+  String _displayName = '';
+  String _accountNumber = '';
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _recentTransactions = [];
 
-  final List<Map<String, dynamic>> _quickServices = [
+  final List<Map<String, dynamic>> _quickServices = const [
     {'icon': CupertinoIcons.paperplane_fill, 'label': 'Chuyển tiền', 'color': AppColors.primary, 'route': '/transfer'},
-    {'icon': CupertinoIcons.device_phone_portrait, 'label': 'Nạp ĐT', 'color': AppColors.emeraldGreen, 'route': '/bills'},
-    {'icon': CupertinoIcons.bolt_fill, 'label': 'Điện nước', 'color': AppColors.accentGold, 'route': '/bills'},
-    {'icon': CupertinoIcons.money_dollar_circle_fill, 'label': 'Tiết kiệm', 'color': AppColors.vividTeal, 'route': '/bills'},
-    {'icon': CupertinoIcons.chart_bar_alt_fill, 'label': 'Vay nhanh', 'color': AppColors.softPurple, 'route': '/bills'},
-    {'icon': CupertinoIcons.ticket_fill, 'label': 'Vietlott', 'color': Colors.redAccent, 'route': '/bills'},
-    {'icon': CupertinoIcons.creditcard_fill, 'label': 'Quản lý thẻ', 'color': Colors.blueAccent, 'route': '/cards'},
-    {'icon': CupertinoIcons.ellipsis, 'label': 'Xem thêm', 'color': Colors.grey, 'route': '/more'},
+    {'icon': CupertinoIcons.device_phone_portrait, 'label': 'Nạp ĐT', 'color': AppColors.emeraldGreen, 'route': '/bills/phone-recharge'},
+    {'icon': CupertinoIcons.doc_text_fill, 'label': 'Điện nước', 'color': AppColors.accentGold, 'route': '/bills'},
+    {'icon': CupertinoIcons.money_dollar_circle_fill, 'label': 'Tiết kiệm', 'color': AppColors.vividTeal, 'route': '/bills/savings'},
+    {'icon': CupertinoIcons.chart_bar_alt_fill, 'label': 'Vay nhanh', 'color': AppColors.softPurple, 'route': '/bills/quick-loan'},
+    {'icon': CupertinoIcons.ticket_fill, 'label': 'Vietlott', 'color': AppColors.bottomBarCyan, 'route': '/bills/lottery'},
+    {'icon': CupertinoIcons.creditcard_fill, 'label': 'Quản lý thẻ', 'color': AppColors.primaryDark, 'route': '/cards'},
+    {'icon': CupertinoIcons.ellipsis, 'label': 'Xem thêm', 'color': AppColors.textSecondaryLight, 'route': '/more'},
   ];
 
-  final List<Map<String, dynamic>> _recentTransactions = [
-    {
-      'title': 'Chuyển tiền tới NGUYEN VAN A',
-      'desc': 'Chuyen tien an trua',
-      'amount': -150000.0,
-      'time': '10:30 Hôm nay',
-      'type': 'transfer',
-    },
-    {
-      'title': 'Nạp tiền từ VCB *8899',
-      'desc': 'Nap tien vao vi Sen Hong',
-      'amount': 2000000.0,
-      'time': 'Hôm qua',
-      'type': 'deposit',
-    },
-    {
-      'title': 'Thanh toán EVN Hà Nội',
-      'desc': 'Tien dien thang 08/2026',
-      'amount': -485000.0,
-      'time': '02/09/2026',
-      'type': 'bill',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadAllData();
+  }
+
+  Future<void> _loadAllData() async {
+    await Future.wait([
+      _loadProfile(),
+      _loadWalletAndTransactions(),
+    ]);
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      const storage = FlutterSecureStorage();
+      final savedPhone = await storage.read(key: AppConstants.keyPhoneNumber);
+      final savedName = await storage.read(key: AppConstants.keyFullName);
+      if (mounted && (savedPhone != null || savedName != null)) {
+        setState(() {
+          if (savedPhone != null && savedPhone.isNotEmpty) _accountNumber = savedPhone;
+          if (savedName != null && savedName.isNotEmpty) _displayName = savedName;
+        });
+      }
+
+      final profile = await ProfileRemoteDataSource().getMe();
+      if (!mounted) return;
+      setState(() {
+        final fullName = profile['fullName'] as String?;
+        if (fullName != null && fullName.isNotEmpty) {
+          _displayName = fullName;
+        }
+        final phone = profile['phoneNumber'] as String?;
+        if (phone != null && phone.isNotEmpty) {
+          _accountNumber = phone;
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _loadWalletAndTransactions() async {
+    try {
+      final wallet = await WalletRemoteDataSource().getMyWallet();
+      if (mounted) {
+        setState(() => _balance = wallet.balance);
+      }
+      final transactions = await TransactionRemoteDataSource().getTransactions(
+        walletId: wallet.walletId,
+        size: 5,
+      );
+      if (mounted) {
+        setState(() {
+          _recentTransactions = transactions;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // 1. Header Lễ Hội SenBank Tích Hợp Toàn Bộ Thông Tin (Lời chào, STK, Số dư)
-          SliverToBoxAdapter(
-            child: VietnamHeroHeader(
-              balance: _balance,
-              isHidden: _hideBalance,
-              onToggleVisibility: () => setState(() => _hideBalance = !_hideBalance),
-              onNotificationTap: () => context.push('/history'),
-              onProfileTap: () {},
+      body: RefreshIndicator(
+        onRefresh: _loadAllData,
+        color: AppColors.primary,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          slivers: [
+            // 1. Header Lễ Hội SenBank Tích Hợp Toàn Bộ Thông Tin (Lời chào, STK, Số dư)
+            SliverToBoxAdapter(
+              child: VietnamHeroHeader(
+                balance: _balance,
+                isHidden: _hideBalance,
+                onToggleVisibility: () => setState(() => _hideBalance = !_hideBalance),
+                onNotificationTap: () => context.push('/notifications'),
+                onSearchTap: () => context.push('/search'),
+                onTransfer: () => context.push('/transfer'),
+                onDeposit: () => context.push('/deposit'),
+                onWithdraw: () => context.push('/withdraw'),
+                onQr: () => context.push('/my-qr'),
+                onProfileTap: () => context.push('/profile'),
+                displayName: _displayName,
+                accountNumber: _accountNumber,
+              ),
             ),
-          ),
 
             // Quick Services Grid
             SliverToBoxAdapter(
@@ -140,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: CurvedPromoBanner(
-                  onRegisterTap: () => context.push('/bills'),
+                  onRegisterTap: () => context.push('/promotions'),
                 ),
               ),
             ),
@@ -166,62 +224,111 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             // Recent Transactions List
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final tx = _recentTransactions[index];
-                    final isPositive = (tx['amount'] as double) > 0;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.85),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.7), width: 1),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
+            if (_isLoading)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                  ),
+                ),
+              )
+            else if (_recentTransactions.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.7)),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(CupertinoIcons.doc_text_search, size: 40, color: AppColors.textMutedLight),
+                        const SizedBox(height: 8),
+                        Text('Chưa có giao dịch phát sinh', style: AppTypography.titleSmall(color: AppColors.textSecondaryLight)),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Nạp tiền hoặc chuyển tiền để trải nghiệm dịch vụ ngân hàng SenBank ngay!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: AppColors.textMutedLight),
                         ),
-                        child: Material(type: MaterialType.transparency, child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                          leading: CircleAvatar(
-                            backgroundColor: isPositive
-                                ? AppColors.emeraldGreen.withOpacity(0.12)
-                                : AppColors.primary.withOpacity(0.12),
-                            child: Icon(
-                              isPositive ? CupertinoIcons.arrow_down_left : CupertinoIcons.arrow_up_right,
-                              color: isPositive ? AppColors.emeraldGreen : AppColors.primary,
-                              size: 18,
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final tx = _recentTransactions[index];
+                      final amountNum = (tx['amount'] as num?)?.toDouble() ?? 0.0;
+                      final isPositive = amountNum > 0;
+                      final title = tx['title'] as String? ?? 'Giao dịch';
+                      final desc = tx['desc'] as String? ?? '';
+                      final date = tx['date']?.toString() ?? '';
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.85),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white.withOpacity(0.7), width: 1),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              leading: CircleAvatar(
+                                backgroundColor: isPositive
+                                    ? AppColors.emeraldGreen.withOpacity(0.12)
+                                    : AppColors.primary.withOpacity(0.12),
+                                child: Icon(
+                                  isPositive ? CupertinoIcons.arrow_down_left : CupertinoIcons.arrow_up_right,
+                                  color: isPositive ? AppColors.emeraldGreen : AppColors.primary,
+                                  size: 18,
+                                ),
+                              ),
+                              title: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.titleMedium(color: AppColors.textPrimaryLight),
+                              ),
+                              subtitle: Text(
+                                desc.isNotEmpty ? '$desc • $date' : date,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.bodySmall(color: AppColors.textSecondaryLight),
+                              ),
+                              trailing: Text(
+                                '${isPositive ? '+' : ''}${CurrencyFormatter.formatVND(amountNum)}',
+                                style: AppTypography.titleMedium(
+                                  color: isPositive ? AppColors.emeraldGreen : AppColors.textPrimaryLight,
+                                ),
+                              ),
                             ),
                           ),
-                          title: Text(
-                            tx['title'],
-                            style: AppTypography.titleMedium(color: AppColors.textPrimaryLight),
-                          ),
-                          subtitle: Text(
-                            '${tx['desc']} • ${tx['time']}',
-                            style: AppTypography.bodySmall(color: AppColors.textSecondaryLight),
-                          ),
-                          trailing: Text(
-                            '${isPositive ? '+' : ''}${CurrencyFormatter.formatVND(tx['amount'])}',
-                            style: AppTypography.titleMedium(
-                              color: isPositive ? AppColors.emeraldGreen : AppColors.textPrimaryLight,
-                            ),
-                          ),
-                        )),
-                      ),
-                    );
-                  },
-                  childCount: _recentTransactions.length,
+                        ),
+                      );
+                    },
+                    childCount: _recentTransactions.length,
+                  ),
                 ),
               ),
-            ),
 
             // Bottom Curved Promo & Feature Banner ("bẻ cong ảnh dưới" & "ghép ảnh chéo")
             SliverToBoxAdapter(
@@ -240,6 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
     );
   }
 }

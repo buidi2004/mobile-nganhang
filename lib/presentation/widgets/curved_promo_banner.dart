@@ -51,14 +51,15 @@ class CurvedPromoBanner extends StatefulWidget {
 class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
   late final PageController _pageController;
   Timer? _autoScrollTimer;
-  int _currentPageIndex = 0;
+  // ValueNotifier để chỉ rebuild dots indicator, không rebuild toàn banner
+  final ValueNotifier<int> _currentPageNotifier = ValueNotifier<int>(0);
   static const int _virtualInitialPage = 4000;
 
   static const List<_PromoData> _promos = [
     // Quảng cáo 1: Gói Tiết Kiệm (Banner gốc chuẩn mẫu)
     _PromoData(
       badgeText: 'ƯU ĐÃI ĐẶC QUYỀN',
-      badgeIcon: Icons.bolt,
+      badgeIcon: CupertinoIcons.sparkles,
       title: 'GÓI TIẾT KIỆM',
       highlightValue: '100K',
       highlightText: 'ƯU ĐÃI',
@@ -78,7 +79,7 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
     // Quảng cáo 2: Thẻ Tín Dụng SenBank Visa Platinum (Hoàn tiền)
     _PromoData(
       badgeText: 'HOÀN TIỀN CỰC ĐỈNH',
-      badgeIcon: Icons.stars_rounded,
+      badgeIcon: CupertinoIcons.star_fill,
       title: 'THẺ SEN PLATINUM',
       highlightValue: '50%',
       highlightText: 'HOÀN TIỀN',
@@ -98,13 +99,13 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
     // Quảng cáo 3: Vay Tiêu Dùng Siêu Tốc (0% lãi suất)
     _PromoData(
       badgeText: 'GIẢI NGÂN 15 PHÚT',
-      badgeIcon: Icons.flash_on_rounded,
+      badgeIcon: CupertinoIcons.rocket_fill,
       title: 'VAY SIÊU TỐC',
       highlightValue: '0%',
       highlightText: 'LÃI THÁNG ĐẦU',
       buttonText: 'NHẬN TIỀN NGAY',
       buttonTextColor: Color(0xFF00695C),
-      rightIcon: CupertinoIcons.bolt_circle_fill,
+      rightIcon: CupertinoIcons.money_dollar_circle_fill,
       gradientColors: [
         Color(0xFF004D40),
         Color(0xFF00695C),
@@ -118,7 +119,7 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
     // Quảng cáo 4: Bảo Hiểm Toàn Diện SenCare
     _PromoData(
       badgeText: 'BẢO VỆ TOÀN DIỆN',
-      badgeIcon: Icons.shield_rounded,
+      badgeIcon: CupertinoIcons.shield_fill,
       title: 'BẢO HIỂM SENCARE',
       highlightValue: '1 TỶ',
       highlightText: 'BẢO VỆ GIA ĐÌNH',
@@ -145,14 +146,6 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
     }
   }
 
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (!widget.isDiagonalSlanted) {
-      _startAutoScroll();
-    }
-  }
-
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 3, milliseconds: 500), (timer) {
@@ -167,6 +160,7 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
   @override
   void dispose() {
     _autoScrollTimer?.cancel();
+    _currentPageNotifier.dispose();
     if (!widget.isDiagonalSlanted) {
       _pageController.dispose();
     }
@@ -198,9 +192,8 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
-                setState(() {
-                  _currentPageIndex = index % _promos.length;
-                });
+                // Chỉ cập nhật notifier — không rebuild toàn banner
+                _currentPageNotifier.value = index % _promos.length;
               },
               itemBuilder: (context, virtualIndex) {
                 final promo = _promos[virtualIndex % _promos.length];
@@ -209,25 +202,30 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
             ),
           ),
 
-          // 4 Chấm chỉ báo trang (Page Indicators) thanh lịch ở góc phải dưới
+          // 4 Chấm chỉ báo trang — chỉ phần này rebuild khi đổi trang
           Positioned(
             bottom: 12,
             right: 22,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(_promos.length, (i) {
-                final isSelected = i == _currentPageIndex;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                  width: isSelected ? 16 : 5,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.white : Colors.white.withOpacity(0.38),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
+            child: ValueListenableBuilder<int>(
+              valueListenable: _currentPageNotifier,
+              builder: (context, currentIndex, _) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(_promos.length, (i) {
+                    final isSelected = i == currentIndex;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                      width: isSelected ? 16 : 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.white : Colors.white.withOpacity(0.38),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    );
+                  }),
                 );
-              }),
+              },
             ),
           ),
         ],
@@ -315,7 +313,7 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(promo.badgeIcon, color: const Color(0xFFFFD54F), size: 14),
+                              Icon(promo.badgeIcon, color: const Color(0xFF26E5DC), size: 14),
                               const SizedBox(width: 4),
                               Text(
                                 promo.badgeText,
@@ -479,7 +477,7 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
                           child: Icon(
                             promo.rightIcon,
                             size: 46,
-                            color: const Color(0xFFFFD54F),
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -537,7 +535,7 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
               top: -10,
               bottom: -15,
               child: Transform.rotate(
-                angle: -0.16, // Nghiêng chéo ~9.5 độ
+                angle: -0.20, // Nghiêng chéo ~11.5 độ (tăng thêm 1 xíu từ -0.16)
                 child: Container(
                   width: 155,
                   decoration: BoxDecoration(
@@ -550,7 +548,7 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(28), // Bo cong viền ảnh từ 24px lên 28px
                     border: Border.all(
                       color: Colors.white,
                       width: 2.5,
@@ -634,8 +632,8 @@ class _CurvedPromoBannerState extends State<CurvedPromoBanner> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.bolt, color: Color(0xFFFFD54F), size: 13),
-                          SizedBox(width: 3),
+                          Icon(CupertinoIcons.gift_fill, color: Color(0xFF26E5DC), size: 13),
+                          SizedBox(width: 4),
                           Text(
                             'ƯU ĐÃI ĐẶC QUYỀN',
                             style: TextStyle(

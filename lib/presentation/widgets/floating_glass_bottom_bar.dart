@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 /// Icon 4 ô vuông bo góc đa sắc XOAY NGHIÊNG CHÉO 3D kèm ngôi sao lấp lánh (Sparkle)
@@ -97,62 +98,6 @@ class FourTileQuickActionIcon extends StatelessWidget {
             ),
           ),
 
-          // Điểm sáng lóe 4 cánh lấp lánh (Sparkle Star) ở góc trên bên trái
-          Positioned(
-            top: 2,
-            left: 2,
-            child: _buildSparkle(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSparkle() {
-    return SizedBox(
-      width: 13,
-      height: 13,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 12,
-            height: 1.8,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.9),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 1.8,
-            height: 12,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.9),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 4,
-            height: 4,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
         ],
       ),
     );
@@ -271,16 +216,16 @@ class GlassNavBackground extends StatelessWidget {
             ? const LiquidOval()
             : LiquidRoundedRectangle(borderRadius: borderRadius),
         settings: const LiquidGlassSettings(
-          thickness: 22,
+          thickness: 25,
           blur: 4.0,
           glassColor: Color(0x14FFFFFF),
-          lightIntensity: 0.75,
-          refractiveIndex: 1.22,
-          chromaticAberration: 0.03,
+          lightIntensity: 0.78,
+          refractiveIndex: 1.28, // Tăng thêm 1 xíu độ bẻ cong hình ảnh nền (từ 1.22 lên 1.28)
+          chromaticAberration: 0.0,
           ambientStrength: 0.16,
-          fresnelStrength: 0.95,
+          fresnelStrength: 1.05,
           saturation: 1.20,
-          edgeAbsorption: 0.06,
+          edgeAbsorption: 0.07,
           shadowElevation: 0.0,
         ),
       ),
@@ -309,14 +254,14 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
   static const List<IconData> _tabIcons = [
     CupertinoIcons.house_fill,
     CupertinoIcons.clock_fill,
-    CupertinoIcons.bell_fill,
+    CupertinoIcons.gift_fill,
     CupertinoIcons.person_fill,
   ];
 
   @override
   Widget build(BuildContext context) {
     return GlassAdaptiveScope(
-      minQuality: GlassQuality.premium,
+      minQuality: GlassQuality.standard,
       maxQuality: GlassQuality.premium,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
@@ -410,16 +355,19 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       behavior: HitTestBehavior.opaque,
       child: Container(
         color: Colors.transparent,
         alignment: Alignment.center,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeInOutCubic,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutBack,
           // Kích thước viên thuốc nhỏ gọn, cân đối, để lại khoảng thở 12px trên dưới
-          width: isSelected ? 54 : 44,
+          width: isSelected ? 56 : 42,
           height: 42,
           decoration: isSelected
               ? BoxDecoration(
@@ -434,7 +382,7 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
                   borderRadius: BorderRadius.circular(21),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF00E5FF).withOpacity(0.40),
+                      color: const Color(0xFF00E5FF).withOpacity(0.42),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -442,10 +390,15 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
                 )
               : null,
           alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 22,
-            color: isSelected ? Colors.white : const Color(0xFF2D3748),
+          child: AnimatedScale(
+            scale: isSelected ? 1.14 : 1.0,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutBack,
+            child: Icon(
+              icon,
+              size: 22,
+              color: isSelected ? Colors.white : const Color(0xFF2D3748),
+            ),
           ),
         ),
       ),

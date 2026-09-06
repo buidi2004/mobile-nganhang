@@ -42,6 +42,8 @@ import '../screens/history/transaction_detail_screen.dart';
 import '../screens/bills/bill_payment_screen.dart';
 import '../screens/bills/bill_input_screen.dart';
 import '../screens/bills/bill_confirm_screen.dart';
+import '../screens/bills/bill_payment_confirm_screen.dart';
+import '../screens/bills/phone_topup_confirm_screen.dart';
 import '../screens/bills/phone_recharge_screen.dart';
 import '../screens/bills/lottery_screen.dart';
 import '../screens/bills/savings_screen.dart';
@@ -59,30 +61,118 @@ import '../screens/profile_ekyc/kyc_level_screen.dart';
 import '../screens/profile_ekyc/ekyc_screens.dart';
 import '../screens/profile_ekyc/digital_signature_screen.dart';
 import '../screens/profile_ekyc/email_settings_screen.dart';
+import '../screens/profile_ekyc/nfc_reader_screen.dart';
 
 // Settings & Security
 import '../screens/settings/security_settings_screen.dart';
 import '../screens/settings/device_management_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/settings/config_screen.dart';
+import '../screens/settings/change_pin_screen.dart';
+import '../screens/settings/notification_settings_screen.dart';
+import '../screens/bills/savings_detail_screen.dart';
+import '../screens/bills/loan_schedule_screen.dart';
 
 // Notifications, Search & Support
 import '../screens/home/notifications_screen.dart';
 import '../screens/home/search_screen.dart';
 import '../screens/more/referral_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../core/constants/app_constants.dart';
 import '../screens/support/help_center_screen.dart';
 import '../screens/support/live_chat_screen.dart';
+import '../screens/splash/splash_screen.dart';
+import '../widgets/animated_branch_container.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/',
+  initialLocation: '/splash',
+  redirect: (context, state) async {
+    final path = state.uri.path;
+
+    // 1. Màn hình Splash được phép chạy để hiển thị hiệu ứng khởi động
+    if (path == '/splash') return null;
+
+    // 2. Danh sách các tuyến đường công khai (không yêu cầu đăng nhập)
+    final isAuthRoute = path.startsWith('/auth');
+    final isPublicSupport = path == '/support/help-center' || path == '/help-center';
+    final isPublicRoute = isAuthRoute || isPublicSupport;
+
+    // 3. Kiểm tra Access Token trong SecureStorage
+    bool isLoggedIn = false;
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: AppConstants.keyAccessToken);
+      isLoggedIn = token != null && token.isNotEmpty;
+    } catch (_) {
+      isLoggedIn = false;
+    }
+
+    // Chưa đăng nhập và cố vào tuyến đường được bảo vệ -> chuyển về Đăng nhập
+    if (!isLoggedIn && !isPublicRoute) {
+      return '/auth/login';
+    }
+
+    // Đã đăng nhập và cố vào màn hình đăng nhập hoặc đăng ký -> chuyển về Trang chủ
+    if (isLoggedIn && (path == '/auth/login' || path == '/auth/register')) {
+      return '/';
+    }
+
+    return null;
+  },
   routes: [
-    // 4 Main Tabs (StatefulShellRoute with FloatingGlassBottomBar)
-    StatefulShellRoute.indexedStack(
+    // Màn hình Splash khởi động với hiệu ứng Hoa Sen Nở (Blooming Lotus)
+    GoRoute(
+      path: '/splash',
+      name: 'splash',
+      parentNavigatorKey: _rootNavigatorKey,
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const SplashScreen(),
+        transitionDuration: const Duration(milliseconds: 500),
+        reverseTransitionDuration: const Duration(milliseconds: 400),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Hiệu ứng hòa tan quang học khi chuyển tiếp vào Trang chủ:
+          // Đóa sen nở phóng nhẹ (1.0 -> 1.05) và mờ dần vào Home (1.0 -> 0.0)
+          final fadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(
+            CurvedAnimation(
+              parent: secondaryAnimation,
+              curve: Curves.easeInOutCubic,
+            ),
+          );
+          final scaleOut = Tween<double>(begin: 1.0, end: 1.05).animate(
+            CurvedAnimation(
+              parent: secondaryAnimation,
+              curve: Curves.easeOutCubic,
+            ),
+          );
+
+          return FadeTransition(
+            opacity: animation,
+            child: FadeTransition(
+              opacity: fadeOut,
+              child: ScaleTransition(
+                scale: scaleOut,
+                child: child,
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+
+    // 4 Main Tabs (StatefulShellRoute with FloatingGlassBottomBar & Smooth Animated Transitions)
+    StatefulShellRoute(
       builder: (context, state, navigationShell) {
         return MainTabsScreen(navigationShell: navigationShell);
+      },
+      navigatorContainerBuilder: (context, navigationShell, children) {
+        return AnimatedBranchContainer(
+          currentIndex: navigationShell.currentIndex,
+          children: children,
+        );
       },
       branches: [
         // Tab 1: Home
@@ -135,7 +225,14 @@ final GoRouter appRouter = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/auth/login',
       name: 'login',
-      builder: (context, state) => const LoginScreen(),
+      builder: (context, state) {
+        final sessionExpired = state.uri.queryParameters['sessionExpired'] == 'true';
+        final message = state.uri.queryParameters['message'];
+        return LoginScreen(
+          sessionExpired: sessionExpired,
+          expiredMessage: message,
+        );
+      },
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
@@ -201,7 +298,17 @@ final GoRouter appRouter = GoRouter(
       name: 'transfer-amount',
       builder: (context, state) {
         final recipient = state.uri.queryParameters['recipient'] ?? 'Ví Sen Hồng';
-        return EnterAmountScreen(recipient: recipient);
+        final phoneNumber = state.uri.queryParameters['phoneNumber'];
+        final walletId = state.uri.queryParameters['walletId'];
+        final amount = double.tryParse(state.uri.queryParameters['amount'] ?? '');
+        final note = state.uri.queryParameters['note'];
+        return EnterAmountScreen(
+          recipient: recipient,
+          phoneNumber: phoneNumber,
+          walletId: walletId,
+          initialAmount: amount,
+          initialNote: note,
+        );
       },
     ),
     GoRoute(
@@ -210,10 +317,14 @@ final GoRouter appRouter = GoRouter(
       name: 'transfer-confirm',
       builder: (context, state) {
         final recipient = state.uri.queryParameters['recipient'] ?? 'Ví Sen Hồng';
+        final phoneNumber = state.uri.queryParameters['phoneNumber'];
+        final walletId = state.uri.queryParameters['walletId'];
         final amount = double.tryParse(state.uri.queryParameters['amount'] ?? '0') ?? 0;
         final note = state.uri.queryParameters['note'] ?? 'Chuyen tien';
         return ConfirmTransferScreen(
           recipient: recipient,
+          phoneNumber: phoneNumber,
+          walletId: walletId,
           amount: amount,
           note: note,
         );
@@ -240,12 +351,18 @@ final GoRouter appRouter = GoRouter(
       name: 'transfer-result',
       builder: (context, state) {
         final recipient = state.uri.queryParameters['recipient'] ?? 'Ví Sen Hồng';
+        final phoneNumber = state.uri.queryParameters['phoneNumber'];
         final amount = double.tryParse(state.uri.queryParameters['amount'] ?? '0') ?? 0;
         final note = state.uri.queryParameters['note'] ?? 'Chuyen tien';
+        final transactionId = state.uri.queryParameters['transactionId'];
+        final status = state.uri.queryParameters['status'] ?? 'SUCCESS';
         return TransferResultScreen(
           recipient: recipient,
+          phoneNumber: phoneNumber,
           amount: amount,
           note: note,
+          transactionId: transactionId,
+          status: status,
         );
       },
     ),
@@ -265,6 +382,12 @@ final GoRouter appRouter = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/scan-qr',
       name: 'scan-qr',
+      builder: (context, state) => const ScanQRScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/qr-scanner',
+      name: 'qr-scanner',
       builder: (context, state) => const ScanQRScreen(),
     ),
     GoRoute(
@@ -304,10 +427,11 @@ final GoRouter appRouter = GoRouter(
       path: '/withdraw/confirm',
       name: 'withdraw-confirm',
       builder: (context, state) {
-        final amount = double.tryParse(state.uri.queryParameters['amount'] ?? '1000000') ?? 1000000;
-        final bank = state.uri.queryParameters['bank'] ?? 'Vietcombank';
-        final acc = state.uri.queryParameters['acc'] ?? '0071001234567';
-        return WithdrawConfirmScreen(amount: amount, bank: bank, acc: acc);
+        final amount = double.tryParse(state.uri.queryParameters['amount'] ?? '0') ?? 0;
+        final bank = state.uri.queryParameters['bank'] ?? '';
+        final acc = state.uri.queryParameters['acc'] ?? '';
+        final bankAccountId = state.uri.queryParameters['bankAccountId'] ?? '';
+        return WithdrawConfirmScreen(amount: amount, bank: bank, acc: acc, bankAccountId: bankAccountId);
       },
     ),
 
@@ -362,8 +486,31 @@ final GoRouter appRouter = GoRouter(
         final service = state.uri.queryParameters['service'];
         final provider = state.uri.queryParameters['provider'];
         final code = state.uri.queryParameters['code'];
-        return BillConfirmScreen(service: service, provider: provider, code: code);
+        final billId = state.uri.queryParameters['billId'];
+        final amount = double.tryParse(state.uri.queryParameters['amount'] ?? '0');
+        return BillConfirmScreen(service: service, provider: provider, code: code, billId: billId, amount: amount);
       },
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/bills/payment-confirm',
+      name: 'bills-payment-confirm',
+      builder: (context, state) => BillPaymentConfirmScreen(
+        billId: state.uri.queryParameters['billId'] ?? '',
+        amount: double.tryParse(state.uri.queryParameters['amount'] ?? '0') ?? 0,
+        provider: state.uri.queryParameters['provider'] ?? 'Hóa đơn',
+        customerCode: state.uri.queryParameters['code'] ?? '',
+      ),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/bills/topup-confirm',
+      name: 'bills-topup-confirm',
+      builder: (context, state) => PhoneTopupConfirmScreen(
+        phoneNumber: state.uri.queryParameters['phone'] ?? '',
+        amount: double.tryParse(state.uri.queryParameters['amount'] ?? '0') ?? 0,
+        telco: state.uri.queryParameters['telco'] ?? 'Nhà mạng',
+      ),
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
@@ -385,9 +532,33 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
+      path: '/savings',
+      name: 'savings',
+      builder: (context, state) => const SavingsScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
       path: '/bills/quick-loan',
       name: 'bills-quick-loan',
       builder: (context, state) => const QuickLoanScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/savings/detail',
+      name: 'savings-detail',
+      builder: (context, state) {
+        final passbook = state.extra as Map<String, dynamic>?;
+        return SavingsDetailScreen(passbook: passbook);
+      },
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/loan/schedule',
+      name: 'loan-schedule',
+      builder: (context, state) {
+        final loanData = state.extra as Map<String, dynamic>?;
+        return LoanScheduleScreen(loanData: loanData);
+      },
     ),
 
     // ==========================================
@@ -429,6 +600,12 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
+      path: '/profile/identity-document',
+      name: 'profile-identity-document',
+      builder: (context, state) => const IdentityDocumentScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
       path: '/profile/kyc-level',
       name: 'profile-kyc-level',
       builder: (context, state) => const KycLevelScreen(),
@@ -450,6 +627,12 @@ final GoRouter appRouter = GoRouter(
       path: '/profile/email-settings',
       name: 'profile-email-settings',
       builder: (context, state) => const EmailSettingsScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/profile/nfc-reader',
+      name: 'profile-nfc-reader',
+      builder: (context, state) => const NfcReaderScreen(),
     ),
 
     // ==========================================
@@ -478,6 +661,18 @@ final GoRouter appRouter = GoRouter(
       path: '/settings/config',
       name: 'settings-config',
       builder: (context, state) => const ConfigScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/settings/change-pin',
+      name: 'settings-change-pin',
+      builder: (context, state) => const ChangePinScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/notifications/settings',
+      name: 'notifications-settings',
+      builder: (context, state) => const NotificationSettingsScreen(),
     ),
 
     // ==========================================
@@ -509,8 +704,20 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
+      path: '/help-center',
+      name: 'help-center-alias',
+      builder: (context, state) => const HelpCenterScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
       path: '/support/live-chat',
       name: 'live-chat',
+      builder: (context, state) => const LiveChatScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/live-chat',
+      name: 'live-chat-alias',
       builder: (context, state) => const LiveChatScreen(),
     ),
   ],

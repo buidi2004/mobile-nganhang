@@ -30,6 +30,13 @@
 	<string>Sen Hồng sử dụng FaceID để đăng nhập nhanh và xác thực ký các giao dịch chuyển tiền bảo mật.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Sen Hồng cần truy cập thư viện ảnh để tải mã QR thanh toán từ thiết bị.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Sen Hồng cần gửi thông báo để cập nhật biến động số dư, xác nhận giao dịch chuyển tiền và các thông tin quan trọng từ tài khoản của bạn.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

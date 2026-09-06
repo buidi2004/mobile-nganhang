@@ -38,3 +38,10 @@ ios/.symlinks/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Temporary test screenshots & scratch
+emulator_*.png
+!emulator_screen_updated.png
+screen_*.png
+live_app_*.png
+scratch/
