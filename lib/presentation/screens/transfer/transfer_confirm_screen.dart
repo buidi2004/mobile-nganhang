@@ -10,6 +10,7 @@ import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
 import 'package:sen_hong_bank/data/datasources/remote/transfer_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class TransferConfirmScreen extends StatefulWidget {
   final String recipient;
@@ -64,12 +65,10 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
     final pin = _otpController.text.trim();
     if (pin.length < 6) {
       HapticFeedback.vibrate();
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng nhập đủ 6 số mã xác thực'),
-          backgroundColor: AppColors.error,
-        ),
+      AppAlerts.showError(
+        context,
+        'Vui lòng nhập đủ 6 số mã xác thực',
+        title: 'Lỗi',
       );
       return;
     }
@@ -95,11 +94,10 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
       context.go('/transfer/result?recipient=${Uri.encodeComponent(widget.recipient)}&amount=${widget.amount}&note=${Uri.encodeComponent(widget.note)}&transactionId=$txId');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(extractErrorMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(e),
+          title: 'Giao dịch thất bại',
         );
       }
     } finally {
@@ -123,6 +121,13 @@ class _TransferConfirmScreenState extends State<TransferConfirmScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const InlineWarningBanner(
+                title: 'Cảnh báo an toàn xác thực OTP',
+                message: 'Mã OTP là mật khẩu dùng một lần để chuyển tiền. SenBank KHÔNG BAO GIỜ yêu cầu bạn cung cấp mã này. Cảnh giác kẻ gian mạo danh!',
+                type: AlertType.warning,
+              ),
+              const SizedBox(height: 16),
+
               // Transaction Review Brief Card
               GlassCard(
                 quality: GlassQuality.minimal,

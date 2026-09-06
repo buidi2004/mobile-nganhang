@@ -6,6 +6,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/data/datasources/remote/bill_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class BillInputScreen extends StatefulWidget {
@@ -55,8 +56,11 @@ class _BillInputScreenState extends State<BillInputScreen> {
       context.push('/bills/confirm?service=${Uri.encodeComponent(widget.serviceType ?? "Hóa đơn")}&provider=${Uri.encodeComponent(provider)}&code=$code&billId=${bill['billId'] ?? bill['id']}&amount=${bill['amount'] ?? 0}');
     } catch (error) {
       if (mounted) {
-        final rawMsg = error.toString().replaceAll('Exception: ', '');
-        AppAlerts.showError(context, rawMsg, title: 'Tra cứu thất bại');
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Tra cứu không thành công',
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

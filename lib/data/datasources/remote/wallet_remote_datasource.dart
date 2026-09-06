@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/storage/app_secure_storage.dart';
 import '../../../domain/entities/wallet_entity.dart';
 import 'api_response.dart';
 
@@ -12,21 +13,21 @@ class WalletRemoteDataSource {
 
   WalletRemoteDataSource({Dio? dio, FlutterSecureStorage? storage})
       : _dio = dio ?? DioClient().dio,
-        _storage = storage ?? const FlutterSecureStorage();
+        _storage = storage ?? AppSecureStorage.instance;
 
   Future<WalletEntity> getMyWallet() async {
     // 1. Luôn ưu tiên gọi GET /wallets/me để lấy thông tin ví và walletId chính thức từ BE
     try {
       final response = await _dio.get(ApiConstants.walletMe);
       final wallet = _parseWallet(response.data);
-      await _storage.write(key: AppConstants.keyWalletId, value: wallet.walletId);
+      await AppSecureStorage.safeWrite(_storage, key: AppConstants.keyWalletId, value: wallet.walletId);
       return wallet;
     } on DioException catch (e) {
       if (e.response?.statusCode != 404) rethrow;
     }
 
     // 2. Dự phòng: Kiểm tra cache walletId đã lưu trước đó
-    final cachedWalletId = await _storage.read(key: AppConstants.keyWalletId);
+    final cachedWalletId = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyWalletId);
     if (cachedWalletId != null && cachedWalletId.isNotEmpty) {
       try {
         final res = await _dio.get(ApiConstants.walletDetail(cachedWalletId));
@@ -35,7 +36,7 @@ class WalletRemoteDataSource {
     }
 
     // 3. Fallback theo số điện thoại qua recipient-info
-    final phone = await _storage.read(key: AppConstants.keyPhoneNumber);
+    final phone = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyPhoneNumber);
     if (phone != null && phone.isNotEmpty) {
       final infoRes = await _dio.get(
         ApiConstants.recipientInfo,
@@ -44,7 +45,7 @@ class WalletRemoteDataSource {
       final infoJson = Map<String, dynamic>.from(infoRes.data as Map);
       final walletId = infoJson['data']?['walletId'] as String?;
       if (walletId != null && walletId.isNotEmpty) {
-        await _storage.write(key: AppConstants.keyWalletId, value: walletId);
+        await AppSecureStorage.safeWrite(_storage, key: AppConstants.keyWalletId, value: walletId);
         final walletRes = await _dio.get(ApiConstants.walletDetail(walletId));
         return _parseWallet(walletRes.data);
       }

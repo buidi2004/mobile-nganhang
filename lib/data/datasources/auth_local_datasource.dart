@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/storage/app_secure_storage.dart';
 
 abstract class AuthLocalDataSource {
   Future<void> saveTokens({required String accessToken, required String refreshToken});
@@ -23,58 +24,58 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   AuthLocalDataSourceImpl({
     FlutterSecureStorage? secureStorage,
     required SharedPreferences prefs,
-  })  : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
+  })  : _secureStorage = secureStorage ?? AppSecureStorage.instance,
         _prefs = prefs;
 
   @override
   Future<void> saveTokens({required String accessToken, required String refreshToken}) async {
-    await _secureStorage.write(key: AppConstants.keyAccessToken, value: accessToken);
-    await _secureStorage.write(key: AppConstants.keyRefreshToken, value: refreshToken);
+    await AppSecureStorage.safeWrite(_secureStorage, key: AppConstants.keyAccessToken, value: accessToken);
+    await AppSecureStorage.safeWrite(_secureStorage, key: AppConstants.keyRefreshToken, value: refreshToken);
   }
 
   @override
   Future<String?> getAccessToken() async {
-    return await _secureStorage.read(key: AppConstants.keyAccessToken);
+    return await AppSecureStorage.safeRead(_secureStorage, key: AppConstants.keyAccessToken);
   }
 
   @override
   Future<String?> getRefreshToken() async {
-    return await _secureStorage.read(key: AppConstants.keyRefreshToken);
+    return await AppSecureStorage.safeRead(_secureStorage, key: AppConstants.keyRefreshToken);
   }
 
 
   @override
   Future<void> clearTokens() async {
-    await _secureStorage.delete(key: AppConstants.keyAccessToken);
-    await _secureStorage.delete(key: AppConstants.keyRefreshToken);
-    await _secureStorage.delete(key: AppConstants.keyPinToken);
-    await _secureStorage.delete(key: AppConstants.keyWalletId);
+    await AppSecureStorage.safeDelete(_secureStorage, key: AppConstants.keyAccessToken);
+    await AppSecureStorage.safeDelete(_secureStorage, key: AppConstants.keyRefreshToken);
+    await AppSecureStorage.safeDelete(_secureStorage, key: AppConstants.keyPinToken);
+    await AppSecureStorage.safeDelete(_secureStorage, key: AppConstants.keyWalletId);
   }
 
   @override
   Future<void> saveIdentity({required String userId, required String phoneNumber}) async {
-    await _secureStorage.write(key: AppConstants.keyUserId, value: userId);
-    await _secureStorage.write(key: AppConstants.keyPhoneNumber, value: phoneNumber);
+    await AppSecureStorage.safeWrite(_secureStorage, key: AppConstants.keyUserId, value: userId);
+    await AppSecureStorage.safeWrite(_secureStorage, key: AppConstants.keyPhoneNumber, value: phoneNumber);
   }
 
   @override
   Future<void> saveFullName(String fullName) async {
-    await _secureStorage.write(key: AppConstants.keyFullName, value: fullName);
+    await AppSecureStorage.safeWrite(_secureStorage, key: AppConstants.keyFullName, value: fullName);
   }
 
   @override
   Future<String?> getFullName() async {
-    return await _secureStorage.read(key: AppConstants.keyFullName);
+    return await AppSecureStorage.safeRead(_secureStorage, key: AppConstants.keyFullName);
   }
 
   @override
   Future<void> saveWalletId(String walletId) async {
-    await _secureStorage.write(key: AppConstants.keyWalletId, value: walletId);
+    await AppSecureStorage.safeWrite(_secureStorage, key: AppConstants.keyWalletId, value: walletId);
   }
 
   @override
   Future<String?> getWalletId() async {
-    return await _secureStorage.read(key: AppConstants.keyWalletId);
+    return await AppSecureStorage.safeRead(_secureStorage, key: AppConstants.keyWalletId);
   }
 
   @override

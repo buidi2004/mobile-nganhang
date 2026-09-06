@@ -11,6 +11,7 @@ import 'package:sen_hong_bank/presentation/widgets/custom_pin_numpad.dart';
 import 'package:sen_hong_bank/data/datasources/remote/transfer_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class ConfirmTransferScreen extends StatefulWidget {
   final String recipient;
@@ -165,18 +166,12 @@ class _ConfirmTransferScreenState extends State<ConfirmTransferScreen> {
           setState(() => _showPinModal = false);
           _showAccountLockedDialog();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(msg),
-              backgroundColor: AppColors.error,
-              action: isPinNotSet
-                  ? SnackBarAction(
-                      label: 'Cài mã PIN',
-                      textColor: Colors.white,
-                      onPressed: () => context.push('/auth/forgot-pin'),
-                    )
-                  : null,
-            ),
+          AppAlerts.showError(
+            context,
+            msg,
+            title: 'Chuyển tiền thất bại',
+            actionLabel: isPinNotSet ? 'Cài mã PIN' : null,
+            onAction: isPinNotSet ? () => context.push('/auth/forgot-pin') : null,
           );
         }
       }
@@ -267,7 +262,15 @@ class _ConfirmTransferScreenState extends State<ConfirmTransferScreen> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
+
+              const InlineWarningBanner(
+                title: 'Cảnh báo an toàn chuyển tiền',
+                message: 'Quý khách vui lòng kiểm tra kỹ số tài khoản và họ tên người nhận. Tuyệt đối không chia sẻ mã PIN hay OTP cho bất kỳ ai (kể cả nhân viên SenBank).',
+                type: AlertType.warning,
+              ),
+
+              const SizedBox(height: 16),
 
               // Details Card (GlassCard)
               GlassCard(

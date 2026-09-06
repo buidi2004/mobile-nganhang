@@ -6,6 +6,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class EnterAmountScreen extends StatefulWidget {
   final String recipient;
@@ -163,6 +164,23 @@ class _EnterAmountScreenState extends State<EnterAmountScreen> {
 
               // 2. Amount Input Card
               _buildAmountInputCard(amountVal),
+              if (_balance > 0 && amountVal > _balance) ...[
+                const SizedBox(height: 12),
+                InlineWarningBanner(
+                  title: 'Số dư khả dụng không đủ',
+                  message: 'Số tiền chuyển (${CurrencyFormatter.formatVND(amountVal)}) vượt quá số dư ví hiện có (${CurrencyFormatter.formatVND(_balance)}).',
+                  type: AlertType.error,
+                  actionLabel: 'Nạp tiền',
+                  onAction: () => context.push('/deposit'),
+                ),
+              ] else if (amountVal > remainingLimit) ...[
+                const SizedBox(height: 12),
+                InlineWarningBanner(
+                  title: 'Vượt hạn mức trong ngày',
+                  message: 'Hạn mức giao dịch còn lại hôm nay là ${CurrencyFormatter.formatVND(remainingLimit)}. Vui lòng điều chỉnh số tiền.',
+                  type: AlertType.warning,
+                ),
+              ],
               const SizedBox(height: 16),
 
               // 3. Quick Amount Chips
@@ -186,7 +204,7 @@ class _EnterAmountScreenState extends State<EnterAmountScreen> {
               const SizedBox(height: 24),
 
               // 8. Submit Button
-              _buildSubmitButton(amountVal),
+              _buildSubmitButton(amountVal, remainingLimit),
               const SizedBox(height: 20),
 
               // 9. Guarantee & Security Notice
@@ -872,21 +890,22 @@ class _EnterAmountScreenState extends State<EnterAmountScreen> {
     );
   }
 
-  Widget _buildSubmitButton(double amountVal) {
-    final isExceeded = _balance > 0 && amountVal > _balance;
-    final isEnabled = amountVal > 0 && !isExceeded;
+  Widget _buildSubmitButton(double amountVal, double remainingLimit) {
+    final isExceededBalance = _balance > 0 && amountVal > _balance;
+    final isExceededLimit = amountVal > remainingLimit;
+    final isEnabled = amountVal > 0 && !isExceededBalance && !isExceededLimit;
 
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: isEnabled ? AppColors.primary : AppColors.cardBorderLight,
+          foregroundColor: isEnabled ? Colors.white : Colors.white38,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 4,
+          elevation: isEnabled ? 4 : 0,
           shadowColor: AppColors.primary.withValues(alpha: 0.4),
         ),
         onPressed: isEnabled
@@ -904,11 +923,30 @@ class _EnterAmountScreenState extends State<EnterAmountScreen> {
                     Uri(path: '/transfer/confirm', queryParameters: params);
                 context.push(uri.toString());
               }
-            : null,
+            : () {
+                HapticFeedback.vibrate();
+                if (isExceededBalance) {
+                  AppAlerts.showError(
+                    context,
+                    'Số tiền chuyển vượt quá số dư khả dụng (${CurrencyFormatter.formatVND(_balance)}). Vui lòng nạp thêm tiền.',
+                    title: 'Số dư không đủ',
+                    actionLabel: 'Nạp tiền',
+                    onAction: () => context.push('/deposit'),
+                  );
+                } else if (isExceededLimit) {
+                  AppAlerts.showWarning(
+                    context,
+                    'Số tiền vượt hạn mức chuyển khoản tối đa trong ngày (${CurrencyFormatter.formatVND(remainingLimit)}).',
+                    title: 'Vượt hạn mức ngày',
+                  );
+                }
+              },
         child: Text(
-          isExceeded
-              ? 'Số tiền vượt hạn mức số dư ví'
-              : 'Tiếp tục xác nhận giao dịch',
+          isExceededBalance
+              ? 'Số tiền vượt số dư khả dụng ví'
+              : isExceededLimit
+                  ? 'Vượt hạn mức chuyển tiền ngày'
+                  : 'Tiếp tục xác nhận giao dịch',
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
       ),

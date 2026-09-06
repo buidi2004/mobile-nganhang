@@ -14,7 +14,9 @@ import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/notification_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/profile_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/presentation/widgets/floating_notification_hud.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -135,8 +137,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi tải thông báo: $error')),
+      AppAlerts.showError(
+        context,
+        extractErrorMessage(error),
+        title: 'Lỗi tải thông báo',
       );
     }
   }
@@ -162,11 +166,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           n['read'] = true;
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã đánh dấu đọc tất cả thông báo')),
+      AppAlerts.showSuccess(
+        context,
+        'Đã đánh dấu đọc tất cả thông báo',
+        title: 'Thông báo',
       );
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Thao tác không thành công',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isMarkingAllRead = false);
     }

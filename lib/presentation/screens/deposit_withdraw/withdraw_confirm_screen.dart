@@ -1,16 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:sen_hong_bank/core/storage/app_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/constants/app_constants.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/data/datasources/remote/profile_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_transaction_remote_datasource.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class WithdrawConfirmScreen extends StatefulWidget {
   final double amount;
@@ -43,10 +45,9 @@ class _WithdrawConfirmScreenState extends State<WithdrawConfirmScreen> {
 
   Future<void> _loadHolderName() async {
     try {
-      const storage = FlutterSecureStorage();
-      final savedName = await storage.read(key: AppConstants.keyFullName);
-      if (savedName != null && savedName.isNotEmpty && mounted) {
-        setState(() => _holderName = savedName.toUpperCase());
+      final cachedName = await AppSecureStorage.safeRead(AppSecureStorage.instance, key: AppConstants.keyFullName);
+      if (cachedName != null && cachedName.isNotEmpty && mounted) {
+        setState(() => _holderName = cachedName.toUpperCase());
       }
       final profile = await ProfileRemoteDataSource().getMe();
       final name = profile['fullName'] as String?;
@@ -74,8 +75,10 @@ class _WithdrawConfirmScreenState extends State<WithdrawConfirmScreen> {
   }
 
   void _handleBiometric() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sinh trắc học chưa được cấu hình với backend. Vui lòng dùng mã PIN.')),
+    AppAlerts.showInfo(
+      context,
+      'Tính năng xác thực sinh trắc học đang đồng bộ. Quý khách vui lòng nhập mã PIN bảo mật.',
+      title: 'Sinh trắc học',
     );
   }
 
@@ -97,7 +100,14 @@ class _WithdrawConfirmScreenState extends State<WithdrawConfirmScreen> {
         '/transfer/result?recipient=${Uri.encodeComponent('${widget.bank} - ${widget.acc}')}&amount=${widget.amount}&note=Rut%20tien&transactionId=${result['transactionId'] ?? ''}&status=${result['status'] ?? 'SUCCESS'}',
       );
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        setState(() => _pin = '');
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Rút tiền không thành công',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -120,6 +130,13 @@ class _WithdrawConfirmScreenState extends State<WithdrawConfirmScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                 child: Column(
                   children: [
+                    const InlineWarningBanner(
+                      title: 'Lưu ý an toàn rút tiền',
+                      message: 'Tiền chỉ được rút về tài khoản ngân hàng chính chủ. Quý khách vui lòng kiểm tra chính xác số tài khoản trước khi nhập mã PIN.',
+                      type: AlertType.info,
+                    ),
+                    const SizedBox(height: 14),
+
                     // Summary Glass Card
                     GlassCard(
                       quality: GlassQuality.minimal,

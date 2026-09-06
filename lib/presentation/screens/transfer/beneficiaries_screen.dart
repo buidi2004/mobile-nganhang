@@ -6,6 +6,8 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/data/datasources/remote/beneficiary_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class BeneficiariesScreen extends StatefulWidget {
   const BeneficiariesScreen({super.key});
@@ -53,7 +55,7 @@ class _BeneficiariesScreenState extends State<BeneficiariesScreen> {
         _loading = false;
       });
     } catch (error) {
-      if (mounted) setState(() { _error = error.toString(); _loading = false; });
+      if (mounted) setState(() { _error = extractErrorMessage(error); _loading = false; });
     }
   }
 
@@ -227,14 +229,20 @@ class _BeneficiariesScreenState extends State<BeneficiariesScreen> {
                                 HapticFeedback.mediumImpact();
                                 if (ctx.mounted) Navigator.pop(ctx);
                                 await _loadBeneficiaries();
+                                if (mounted) {
+                                  AppAlerts.showSuccess(
+                                    context,
+                                    'Đã lưu người thụ hưởng vào danh bạ!',
+                                    title: 'Thành công',
+                                  );
+                                }
                               } catch (error) {
                                 setModalState(() => isSubmitting = false);
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: AppColors.error,
-                                      content: Text(error.toString().replaceAll('Exception: ', '')),
-                                    ),
+                                  AppAlerts.showError(
+                                    context,
+                                    extractErrorMessage(error),
+                                    title: 'Không thể lưu thụ hưởng',
                                   );
                                 }
                               }
@@ -318,13 +326,19 @@ class _BeneficiariesScreenState extends State<BeneficiariesScreen> {
               try {
                 await BeneficiaryRemoteDataSource().remove(b['id']!);
                 await _loadBeneficiaries();
+                if (mounted) {
+                  AppAlerts.showSuccess(
+                    context,
+                    'Đã xóa người thụ hưởng khỏi danh bạ',
+                    title: 'Xóa thành công',
+                  );
+                }
               } catch (error) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: AppColors.error,
-                      content: Text(error.toString().replaceAll('Exception: ', '')),
-                    ),
+                  AppAlerts.showError(
+                    context,
+                    extractErrorMessage(error),
+                    title: 'Không thể xóa thụ hưởng',
                   );
                 }
               }

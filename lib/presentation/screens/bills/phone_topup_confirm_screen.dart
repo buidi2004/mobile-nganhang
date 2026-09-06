@@ -10,6 +10,7 @@ import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
 import 'package:sen_hong_bank/data/datasources/remote/bill_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_transaction_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 import 'package:sen_hong_bank/presentation/widgets/custom_pin_numpad.dart';
 
@@ -113,8 +114,11 @@ class _PhoneTopupConfirmScreenState extends State<PhoneTopupConfirmScreen> {
       );
     } catch (error) {
       if (mounted) {
-        final rawMsg = error.toString().replaceAll('Exception: ', '');
-        AppAlerts.showError(context, rawMsg, title: 'Giao dịch thất bại');
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Giao dịch không thành công',
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -151,8 +155,11 @@ class _PhoneTopupConfirmScreenState extends State<PhoneTopupConfirmScreen> {
       );
     } catch (error) {
       if (mounted) {
-        final rawMsg = error.toString().replaceAll('Exception: ', '');
-        AppAlerts.showError(context, rawMsg, title: 'Giao dịch thất bại');
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Giao dịch không thành công',
+        );
         setState(() => _pin = '');
       }
     } finally {

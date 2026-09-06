@@ -7,6 +7,8 @@ import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/auth_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -63,22 +65,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   void _resendOtp() {
     _startTimer();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: AppColors.emeraldGreen,
-        content: Text('Đã gửi lại mã OTP qua tin nhắn SMS!'),
-      ),
-    );
+    AppAlerts.showSuccess(context, 'Đã gửi lại mã OTP qua tin nhắn SMS!');
   }
 
   void _requestVoiceOtp() {
     _startTimer();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: AppColors.primary,
-        content: Text('Tổng đài tự động SenBank đang gọi đến số điện thoại của bạn...'),
-      ),
-    );
+    AppAlerts.showSuccess(context, 'Tổng đài tự động SenBank đang gọi đến số điện thoại của bạn...');
   }
 
   @override
@@ -93,27 +85,21 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Future<void> _handleReset() async {
     if (_otpController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập đủ 6 chữ số mã OTP')),
-      );
+      AppAlerts.showWarning(context, 'Vui lòng nhập đủ 6 chữ số mã OTP', title: 'Mã OTP chưa đủ');
       return;
     }
     if (_passController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mật khẩu mới phải có tối thiểu 6 ký tự')),
-      );
+      AppAlerts.showWarning(context, 'Mật khẩu mới phải có tối thiểu 6 ký tự', title: 'Mật khẩu quá ngắn');
       return;
     }
     if (_passController.text != _confirmPassController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Xác nhận mật khẩu không trùng khớp')),
-      );
+      AppAlerts.showWarning(context, 'Xác nhận mật khẩu không trùng khớp', title: 'Xác nhận mật khẩu sai');
       return;
     }
 
     final phone = widget.phone;
     if (phone == null || phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Thiếu số điện thoại khôi phục')));
+      AppAlerts.showError(context, 'Thiếu số điện thoại khôi phục', title: 'Lỗi');
       return;
     }
     setState(() => _isLoading = true);
@@ -125,15 +111,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         newPassword: _passController.text,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColors.emeraldGreen,
-          content: Text('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.'),
-        ),
-      );
+      AppAlerts.showSuccess(context, 'Đổi mật khẩu thành công! Vui lòng đăng nhập lại.', title: 'Thành công');
       context.go('/auth/login');
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        AppAlerts.showError(context, extractErrorMessage(error), title: 'Đặt lại mật khẩu thất bại');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

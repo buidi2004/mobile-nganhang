@@ -10,6 +10,8 @@ import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
 import 'package:sen_hong_bank/data/datasources/remote/profile_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/transaction_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class TransactionDetailScreen extends StatefulWidget {
   final String? id;
@@ -91,9 +93,21 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   Future<void> _downloadReceipt(String txId) async {
     try {
       final bytes = await TransactionRemoteDataSource().getReceipt(txId);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Đã nhận biên lai PDF (${bytes.length} bytes)')));
+      if (mounted) {
+        AppAlerts.showSuccess(
+          context,
+          'Đã tải thành công biên lai điện tử PDF (${bytes.length} bytes)',
+          title: 'Biên lai giao dịch',
+        );
+      }
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Không thể tải biên lai',
+        );
+      }
     }
   }
 
@@ -170,11 +184,10 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
       child: InkWell(
         onTap: () {
           Navigator.pop(ctx);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.primary,
-              content: Text('Đã tạo phiếu tra soát: "$text". Hotline 24/7 1900 6688 sẽ liên hệ trong 2h làm việc.'),
-            ),
+          AppAlerts.showSuccess(
+            context,
+            'Đã tạo phiếu tra soát: "$text". Tổng đài 1900 6688 sẽ liên hệ hỗ trợ trong 2h làm việc.',
+            title: 'Tiếp nhận tra soát',
           );
         },
         borderRadius: BorderRadius.circular(10),

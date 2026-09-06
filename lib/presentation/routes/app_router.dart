@@ -77,8 +77,8 @@ import '../screens/bills/loan_schedule_screen.dart';
 import '../screens/home/notifications_screen.dart';
 import '../screens/home/search_screen.dart';
 import '../screens/more/referral_screen.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/storage/app_secure_storage.dart';
 import '../screens/support/help_center_screen.dart';
 import '../screens/support/live_chat_screen.dart';
 import '../screens/splash/splash_screen.dart';
@@ -89,8 +89,8 @@ final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(de
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/splash',
-  redirect: (context, state) async {
-    final path = state.uri.path;
+  redirect: (BuildContext context, GoRouterState state) async {
+    final path = state.uri.toString();
 
     // 1. Màn hình Splash được phép chạy để hiển thị hiệu ứng khởi động
     if (path == '/splash') return null;
@@ -100,15 +100,9 @@ final GoRouter appRouter = GoRouter(
     final isPublicSupport = path == '/support/help-center' || path == '/help-center';
     final isPublicRoute = isAuthRoute || isPublicSupport;
 
-    // 3. Kiểm tra Access Token trong SecureStorage
-    bool isLoggedIn = false;
-    try {
-      const storage = FlutterSecureStorage();
-      final token = await storage.read(key: AppConstants.keyAccessToken);
-      isLoggedIn = token != null && token.isNotEmpty;
-    } catch (_) {
-      isLoggedIn = false;
-    }
+    // 3. Kiểm tra Access Token trong SecureStorage an toàn
+    final token = await AppSecureStorage.safeRead(AppSecureStorage.instance, key: AppConstants.keyAccessToken);
+    final isLoggedIn = token != null && token.isNotEmpty;
 
     // Chưa đăng nhập và cố vào tuyến đường được bảo vệ -> chuyển về Đăng nhập
     if (!isLoggedIn && !isPublicRoute) {

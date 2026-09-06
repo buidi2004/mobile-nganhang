@@ -11,8 +11,10 @@ import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.d
 import 'package:sen_hong_bank/core/network/push_notification_service.dart';
 import 'package:sen_hong_bank/core/network/permission_service.dart';
 import 'package:sen_hong_bank/core/network/realtime_notification_service.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sen_hong_bank/core/constants/app_constants.dart';
+import 'package:sen_hong_bank/core/storage/app_secure_storage.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -158,9 +160,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _loadSavedUser() async {
     try {
-      const storage = FlutterSecureStorage();
-      final savedPhone = await storage.read(key: AppConstants.keyPhoneNumber);
-      final savedName = await storage.read(key: AppConstants.keyFullName);
+      const storage = AppSecureStorage.instance;
+      final savedPhone = await AppSecureStorage.safeRead(storage, key: AppConstants.keyPhoneNumber);
+      final savedName = await AppSecureStorage.safeRead(storage, key: AppConstants.keyFullName);
       if (savedPhone != null && savedPhone.isNotEmpty) {
         _phoneController.text = savedPhone;
         if (mounted) {
@@ -198,13 +200,13 @@ class _LoginScreenState extends State<LoginScreen> {
         deviceId: 'flutter-${DateTime.now().millisecondsSinceEpoch}',
       );
 
-      // Lưu hoặc xóa thông tin ghi nhớ
-      const storage = FlutterSecureStorage();
+      // Lưu hoặc xóa thông tin ghi nhớ an toàn
+      const storage = AppSecureStorage.instance;
       if (_rememberMe) {
-        await storage.write(key: AppConstants.keyPhoneNumber, value: _phoneController.text.trim());
+        await AppSecureStorage.safeWrite(storage, key: AppConstants.keyPhoneNumber, value: _phoneController.text.trim());
       } else {
-        await storage.delete(key: AppConstants.keyPhoneNumber);
-        await storage.delete(key: AppConstants.keyFullName);
+        await AppSecureStorage.safeDelete(storage, key: AppConstants.keyPhoneNumber);
+        await AppSecureStorage.safeDelete(storage, key: AppConstants.keyFullName);
       }
 
       // Đồng bộ FCM token với backend khi đăng nhập thành công
@@ -230,7 +232,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) context.go('/');
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Đăng nhập không thành công',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

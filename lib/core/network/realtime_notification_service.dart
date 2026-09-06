@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import '../constants/api_constants.dart';
 import '../constants/app_constants.dart';
+import '../storage/app_secure_storage.dart';
 import 'dio_client.dart';
 
 class RealtimeNotificationService {
@@ -34,12 +34,12 @@ class RealtimeNotificationService {
     String? userId,
     required String accessToken,
   }) async {
-    const storage = FlutterSecureStorage();
+    const storage = AppSecureStorage.instance;
 
     // 1. Xác định walletId: Tham số truyền vào -> Cache secure storage -> Gọi API GET /wallets/me
     var targetWalletId = walletId;
     if (targetWalletId == null || targetWalletId.isEmpty) {
-      targetWalletId = await storage.read(key: AppConstants.keyWalletId);
+      targetWalletId = await AppSecureStorage.safeRead(storage, key: AppConstants.keyWalletId);
     }
     if (targetWalletId == null || targetWalletId.isEmpty) {
       try {
@@ -52,7 +52,7 @@ class RealtimeNotificationService {
         final data = json['data'] as Map<String, dynamic>?;
         targetWalletId = data?['id']?.toString();
         if (targetWalletId != null && targetWalletId.isNotEmpty) {
-          await storage.write(key: AppConstants.keyWalletId, value: targetWalletId);
+          await AppSecureStorage.safeWrite(storage, key: AppConstants.keyWalletId, value: targetWalletId);
         }
       } catch (e) {
         debugPrint('[WebSocket STOMP] Chưa lấy được walletId từ /wallets/me: $e');
@@ -63,7 +63,7 @@ class RealtimeNotificationService {
     // 2. Xác định userId
     var targetUserId = userId;
     if (targetUserId == null || targetUserId.isEmpty) {
-      targetUserId = await storage.read(key: AppConstants.keyUserId);
+      targetUserId = await AppSecureStorage.safeRead(storage, key: AppConstants.keyUserId);
     }
     _currentUserId = targetUserId;
 

@@ -6,6 +6,8 @@ import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/auth_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -21,8 +23,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _handleSendOtp() async {
     if (_phoneController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập số điện thoại đã đăng ký')),
+      AppAlerts.showWarning(
+        context,
+        'Vui lòng nhập số điện thoại đã đăng ký để nhận mã OTP khôi phục.',
+        title: 'Chưa nhập số điện thoại',
       );
       return;
     }
@@ -33,7 +37,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
       context.push('/auth/reset-password?phone=${Uri.encodeComponent(_phoneController.text.trim())}');
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Khôi phục mật khẩu thất bại',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

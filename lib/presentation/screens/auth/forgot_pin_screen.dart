@@ -7,8 +7,10 @@ import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/auth_remote_datasource.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sen_hong_bank/core/constants/app_constants.dart';
+import 'package:sen_hong_bank/core/storage/app_secure_storage.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class ForgotPinScreen extends StatefulWidget {
   const ForgotPinScreen({super.key});
@@ -27,21 +29,29 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
 
   Future<void> _verifyOtp() async {
     if (_otpCtrl.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập đủ 6 số OTP xác minh')),
+      AppAlerts.showWarning(
+        context,
+        'Vui lòng nhập đủ 6 chữ số mã OTP xác thực',
+        title: 'Mã OTP chưa đủ',
       );
       return;
     }
     setState(() => _isLoading = true);
     try {
       final prefs = await SharedPreferences.getInstance();
-      final phone = await const FlutterSecureStorage().read(key: AppConstants.keyPhoneNumber);
+      final phone = await AppSecureStorage.safeRead(AppSecureStorage.instance, key: AppConstants.keyPhoneNumber);
       if (phone == null || phone.isEmpty) throw Exception('Thiếu số điện thoại xác minh');
       final verified = await AuthRemoteDataSource(local: AuthLocalDataSourceImpl(prefs: prefs)).verifyOtp(phoneNumber: phone, otp: _otpCtrl.text);
-      if (!verified) throw Exception('OTP không hợp lệ');
+      if (!verified) throw Exception('Mã OTP không chính xác');
       if (mounted) setState(() => _currentStep = 2);
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Xác minh OTP thất bại',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -97,16 +107,29 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
       return;
     }
 
+    if (_pin == '123456' || _pin == '000000' || _pin == '111111') {
+      AppAlerts.showWarning(
+        context,
+        'Mã PIN quá đơn giản. Quý khách vui lòng chọn mã khác để bảo mật tài khoản.',
+        title: 'Mã PIN không an toàn',
+      );
+      setState(() {
+        _confirmPin = '';
+        _isConfirming = false;
+        _pin = '';
+      });
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final prefs = await SharedPreferences.getInstance();
       await AuthRemoteDataSource(local: AuthLocalDataSourceImpl(prefs: prefs)).setPin(_pin);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColors.emeraldGreen,
-          content: Text('Cấp lại mã PIN mới thành công!'),
-        ),
+      AppAlerts.showSuccess(
+        context,
+        'Cấp lại mã PIN mới thành công!',
+        title: 'Thành công',
       );
       if (context.canPop()) {
         context.pop();
@@ -114,7 +137,13 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
         context.go('/settings/security');
       }
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Cài đặt mã PIN thất bại',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -135,6 +164,12 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           child: Column(
             children: [
+              const InlineWarningBanner(
+                title: 'Bảo mật mã PIN thanh toán',
+                message: 'Mã PIN 6 số là khóa xác thực cho toàn bộ giao dịch ví SenBank. Không chia sẻ mã PIN cho bất kỳ ai và tránh sử dụng ngày tháng năm sinh.',
+                type: AlertType.warning,
+              ),
+              const SizedBox(height: 18),
               _currentStep == 1 ? _buildOtpStep() : _buildPinStep(),
               const SizedBox(height: 20),
 

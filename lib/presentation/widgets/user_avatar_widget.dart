@@ -2,25 +2,25 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/storage/app_secure_storage.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Global notifier to keep user avatar in sync across all screens
 class UserAvatarNotifier {
   static final ValueNotifier<String?> avatarNotifier = ValueNotifier<String?>(null);
-  static const FlutterSecureStorage _storage = FlutterSecureStorage();
+  static const _storage = AppSecureStorage.instance;
 
   static void update(String? url) {
     avatarNotifier.value = url;
     if (url != null && url.isNotEmpty) {
-      _storage.write(key: AppConstants.keyAvatarUrl, value: url);
+      AppSecureStorage.safeWrite(_storage, key: AppConstants.keyAvatarUrl, value: url);
     }
   }
 
   static Future<void> init() async {
     try {
-      final cached = await _storage.read(key: AppConstants.keyAvatarUrl);
+      final cached = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyAvatarUrl);
       if (cached != null && cached.isNotEmpty) {
         avatarNotifier.value = cached;
       }

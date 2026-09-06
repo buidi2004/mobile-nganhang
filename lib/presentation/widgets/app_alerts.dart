@@ -380,6 +380,8 @@ class InlineWarningBanner extends StatelessWidget {
   final String? title;
   final AlertType type;
   final VoidCallback? onClose;
+  final String? actionLabel;
+  final VoidCallback? onAction;
   final EdgeInsetsGeometry margin;
 
   const InlineWarningBanner({
@@ -388,6 +390,8 @@ class InlineWarningBanner extends StatelessWidget {
     this.title,
     this.type = AlertType.warning,
     this.onClose,
+    this.actionLabel,
+    this.onAction,
     this.margin = const EdgeInsets.only(bottom: 16),
   });
 
@@ -479,6 +483,21 @@ class InlineWarningBanner extends StatelessWidget {
                     height: 1.35,
                   ),
                 ),
+                if (actionLabel != null && onAction != null) ...[
+                  const SizedBox(height: 6),
+                  InkWell(
+                    onTap: onAction,
+                    child: Text(
+                      actionLabel!,
+                      style: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.5,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

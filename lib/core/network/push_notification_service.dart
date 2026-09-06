@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/app_constants.dart';
+import '../storage/app_secure_storage.dart';
 import '../../data/datasources/remote/device_remote_datasource.dart';
 import 'realtime_notification_service.dart';
 
@@ -24,7 +25,7 @@ class PushNotificationService {
   factory PushNotificationService() => _instance;
   PushNotificationService._internal();
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = AppSecureStorage.instance;
   final DeviceRemoteDataSource _deviceRemote = DeviceRemoteDataSource();
 
   String? _cachedFcmToken;
@@ -100,7 +101,7 @@ class PushNotificationService {
 
   Future<void> syncDeviceTokenToBackend(String token) async {
     try {
-      final accessToken = await _storage.read(key: AppConstants.keyAccessToken);
+      final accessToken = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyAccessToken);
       if (accessToken != null && accessToken.isNotEmpty) {
         final deviceType = Platform.isIOS ? 'IOS' : 'ANDROID';
         await _deviceRemote.registerDevice(fcmToken: token, deviceType: deviceType);

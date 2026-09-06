@@ -8,8 +8,10 @@ import 'package:sen_hong_bank/core/constants/app_constants.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_transaction_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class DepositConfirmScreen extends StatefulWidget {
   final double amount;
@@ -67,8 +69,10 @@ class _DepositConfirmScreenState extends State<DepositConfirmScreen> {
   }
 
   void _handleBiometric() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sinh trắc học chưa được cấu hình với backend. Vui lòng dùng mã PIN.')),
+    AppAlerts.showInfo(
+      context,
+      'Tính năng xác thực sinh trắc học đang đồng bộ. Quý khách vui lòng nhập mã PIN bảo mật.',
+      title: 'Sinh trắc học',
     );
   }
 
@@ -86,7 +90,14 @@ class _DepositConfirmScreenState extends State<DepositConfirmScreen> {
         '/transfer/result?recipient=Nạp%20Ví%20Sen%20Hồng&amount=${widget.amount}&note=Nạp%20tiền&transactionId=${result['transactionId'] ?? ''}&status=${result['status'] ?? 'SUCCESS'}',
       );
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        setState(() => _pin = '');
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Nạp tiền không thành công',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -115,6 +126,13 @@ class _DepositConfirmScreenState extends State<DepositConfirmScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                 child: Column(
                   children: [
+                    const InlineWarningBanner(
+                      title: 'Lưu ý nạp tiền an toàn',
+                      message: 'Vui lòng kiểm tra nguồn thanh toán chính chủ. Tiền nạp sẽ được cộng trực tiếp vào số dư khả dụng ngay khi giao dịch thành công.',
+                      type: AlertType.info,
+                    ),
+                    const SizedBox(height: 14),
+
                     // Summary Glass Card
                     GlassCard(
                       quality: GlassQuality.minimal,

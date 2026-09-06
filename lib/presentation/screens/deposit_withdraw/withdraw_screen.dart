@@ -10,6 +10,7 @@ import 'package:sen_hong_bank/data/datasources/remote/bank_account_remote_dataso
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
 
 import 'package:sen_hong_bank/data/datasources/remote/transaction_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class WithdrawScreen extends StatefulWidget {
@@ -96,7 +97,11 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
       });
     } catch (error) {
       if (mounted) {
-        AppAlerts.showError(context, error.toString(), title: 'Tài khoản ngân hàng');
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Tài khoản ngân hàng',
+        );
       }
     }
   }

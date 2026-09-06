@@ -7,6 +7,8 @@ import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/auth_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -273,18 +275,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           }
                           if (pass.length < 6) {
                             HapticFeedback.vibrate();
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Mật khẩu phải có tối thiểu 6 ký tự'),
-                                backgroundColor: AppColors.error,
-                              ),
+                            AppAlerts.showWarning(
+                              context,
+                              'Mật khẩu phải có tối thiểu 6 ký tự để đảm bảo an toàn.',
+                              title: 'Mật khẩu quá ngắn',
                             );
                             return;
                           }
                           setState(() => _isLoading = true);
                           final router = GoRouter.of(context);
-                          final messenger = ScaffoldMessenger.of(context);
                           try {
                             final prefs = await SharedPreferences.getInstance();
                             await AuthRemoteDataSource(
@@ -298,13 +297,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             if (!mounted) return;
                             router.push('/auth/set-pin');
                           } catch (error) {
-                            if (!mounted) return;
-                            messenger.hideCurrentSnackBar();
-                            messenger.showSnackBar(
-                              SnackBar(
-                                content: Text(error.toString().replaceAll('Exception: ', '')),
-                                backgroundColor: AppColors.error,
-                              ),
+                            if (!mounted || !context.mounted) return;
+                            AppAlerts.showError(
+                              context,
+                              extractErrorMessage(error),
+                              title: 'Đăng ký không thành công',
                             );
                           } finally {
                             if (mounted) setState(() => _isLoading = false);

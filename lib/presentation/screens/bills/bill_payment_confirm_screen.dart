@@ -10,7 +10,9 @@ import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
 import 'package:sen_hong_bank/data/datasources/remote/bill_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_transaction_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/presentation/widgets/custom_pin_numpad.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class BillPaymentConfirmScreen extends StatefulWidget {
   final String billId;
@@ -122,12 +124,10 @@ class _BillPaymentConfirmScreenState extends State<BillPaymentConfirmScreen> {
       );
     } catch (error) {
       if (mounted) {
-        final rawMsg = error.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.error,
-            content: Text(rawMsg),
-          ),
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Thanh toán không thành công',
         );
       }
     } finally {
@@ -152,12 +152,10 @@ class _BillPaymentConfirmScreenState extends State<BillPaymentConfirmScreen> {
       );
     } catch (error) {
       if (mounted) {
-        final rawMsg = error.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.error,
-            content: Text(rawMsg),
-          ),
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Thanh toán không thành công',
         );
         setState(() => _pin = '');
       }

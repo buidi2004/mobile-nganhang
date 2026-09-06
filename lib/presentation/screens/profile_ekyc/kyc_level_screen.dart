@@ -6,6 +6,7 @@ import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
 import 'package:sen_hong_bank/data/datasources/remote/profile_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 
 class KycLevelScreen extends StatefulWidget {
   const KycLevelScreen({super.key});
@@ -38,7 +39,7 @@ class _KycLevelScreenState extends State<KycLevelScreen> {
         _loading = false;
       });
     } catch (error) {
-      if (mounted) setState(() { _error = error.toString(); _loading = false; });
+      if (mounted) setState(() { _error = extractErrorMessage(error); _loading = false; });
     }
   }
 

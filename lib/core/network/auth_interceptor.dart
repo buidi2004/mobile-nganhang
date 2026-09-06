@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/app_constants.dart';
 import '../constants/api_constants.dart';
+import '../storage/app_secure_storage.dart';
 import '../theme/app_colors.dart';
 import '../../presentation/routes/app_router.dart';
 
@@ -17,13 +18,23 @@ class AuthInterceptor extends Interceptor {
   static Completer<String?>? _refreshCompleter;
 
   AuthInterceptor({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+      : _storage = storage ?? AppSecureStorage.instance;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    final token = await _storage.read(key: AppConstants.keyAccessToken);
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
+    try {
+      final path = options.path;
+      final isAuthEndpoint = path.contains(ApiConstants.login) ||
+          path.contains(ApiConstants.register);
+
+      if (!isAuthEndpoint) {
+        final token = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyAccessToken);
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+      }
+    } catch (e) {
+      debugPrint('[AuthInterceptor] Bỏ qua lỗi đọc token an toàn: $e');
     }
     handler.next(options);
   }
@@ -85,7 +96,7 @@ class AuthInterceptor extends Interceptor {
 
     // --- Xử lý 403: Forbidden từ Spring Security ---
     if (statusCode == 403 && request.extra['retried'] != true) {
-      final token = await _storage.read(key: AppConstants.keyAccessToken);
+      final token = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyAccessToken);
       if (token == null || token.isEmpty) {
         await _clearTokensAndRedirect();
         return handler.reject(_cleanSessionExpiredException(request, err.response));
@@ -118,7 +129,7 @@ class AuthInterceptor extends Interceptor {
     _refreshCompleter = Completer<String?>();
 
     try {
-      final refreshToken = await _storage.read(key: AppConstants.keyRefreshToken);
+      final refreshToken = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyRefreshToken);
       if (refreshToken == null || refreshToken.isEmpty) {
         _refreshCompleter?.complete(null);
         return null;
@@ -141,9 +152,9 @@ class AuthInterceptor extends Interceptor {
       final newRefreshToken = data?['refreshToken'] as String?;
 
       if (newAccessToken != null && newAccessToken.isNotEmpty) {
-        await _storage.write(key: AppConstants.keyAccessToken, value: newAccessToken);
+        await AppSecureStorage.safeWrite(_storage, key: AppConstants.keyAccessToken, value: newAccessToken);
         if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
-          await _storage.write(key: AppConstants.keyRefreshToken, value: newRefreshToken);
+          await AppSecureStorage.safeWrite(_storage, key: AppConstants.keyRefreshToken, value: newRefreshToken);
         }
         _refreshCompleter?.complete(newAccessToken);
         return newAccessToken;
@@ -167,9 +178,9 @@ class AuthInterceptor extends Interceptor {
 
   /// Xóa toàn bộ token và chỉ hiển thị hộp thoại nếu người dùng đang chủ động dùng app (không phải lúc mở/load app)
   Future<void> _clearTokensAndRedirect() async {
-    final hadToken = await _storage.read(key: AppConstants.keyAccessToken);
-    await _storage.delete(key: AppConstants.keyAccessToken);
-    await _storage.delete(key: AppConstants.keyRefreshToken);
+    final hadToken = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyAccessToken);
+    await AppSecureStorage.safeDelete(_storage, key: AppConstants.keyAccessToken);
+    await AppSecureStorage.safeDelete(_storage, key: AppConstants.keyRefreshToken);
 
     // Nếu dialog đang mở thì không mở thêm
     if (_isSessionExpiredDialogShowing) return;

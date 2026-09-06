@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/storage/app_secure_storage.dart';
 import 'api_response.dart';
 
 class ProfileRemoteDataSource {
@@ -12,7 +13,7 @@ class ProfileRemoteDataSource {
 
   ProfileRemoteDataSource({Dio? dio, FlutterSecureStorage? storage})
       : _dio = dio ?? DioClient().dio,
-        _storage = storage ?? const FlutterSecureStorage();
+        _storage = storage ?? AppSecureStorage.instance;
 
   Future<Map<String, dynamic>> getMe() async {
     final response = await _dio.get(ApiConstants.userMe);
@@ -21,16 +22,16 @@ class ProfileRemoteDataSource {
     // Backend /users/me không trả về trường phoneNumber.
     // Lấy phoneNumber từ secure storage hoặc payload của JWT access token.
     if (map['phoneNumber'] == null || (map['phoneNumber'] as String).isEmpty) {
-      final savedPhone = await _storage.read(key: AppConstants.keyPhoneNumber);
+      final savedPhone = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyPhoneNumber);
       if (savedPhone != null && savedPhone.isNotEmpty) {
         map['phoneNumber'] = savedPhone;
       } else {
-        final token = await _storage.read(key: AppConstants.keyAccessToken);
+        final token = await AppSecureStorage.safeRead(_storage, key: AppConstants.keyAccessToken);
         if (token != null && token.isNotEmpty) {
           final phoneFromJwt = _extractPhoneFromJwt(token);
           if (phoneFromJwt != null && phoneFromJwt.isNotEmpty) {
             map['phoneNumber'] = phoneFromJwt;
-            await _storage.write(key: AppConstants.keyPhoneNumber, value: phoneFromJwt);
+            await AppSecureStorage.safeWrite(_storage, key: AppConstants.keyPhoneNumber, value: phoneFromJwt);
           }
         }
       }
@@ -38,12 +39,12 @@ class ProfileRemoteDataSource {
 
     final fullName = map['fullName'] as String?;
     if (fullName != null && fullName.isNotEmpty) {
-      await _storage.write(key: AppConstants.keyFullName, value: fullName);
+      await AppSecureStorage.safeWrite(_storage, key: AppConstants.keyFullName, value: fullName);
     }
 
     final avatarUrl = map['avatarUrl'] as String?;
     if (avatarUrl != null && avatarUrl.isNotEmpty) {
-      await _storage.write(key: AppConstants.keyAvatarUrl, value: avatarUrl);
+      await AppSecureStorage.safeWrite(_storage, key: AppConstants.keyAvatarUrl, value: avatarUrl);
     }
     return map;
   }

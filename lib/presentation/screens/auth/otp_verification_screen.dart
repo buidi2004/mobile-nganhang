@@ -8,6 +8,8 @@ import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/presentation/widgets/custom_pin_numpad.dart';
 import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/auth_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -61,10 +63,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           phoneNumber: widget.phone ?? '',
           otp: value,
         );
-        if (!verified) throw Exception('OTP không hợp lệ');
+        if (!verified) throw Exception('Mã OTP không chính xác');
         if (mounted) context.push('/auth/set-pin');
       } catch (error) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+        if (mounted) {
+          AppAlerts.showError(
+            context,
+            extractErrorMessage(error),
+            title: 'Xác thực OTP thất bại',
+          );
+        }
       } finally {
         if (mounted) setState(() => _isVerifying = false);
       }
@@ -79,24 +87,28 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       if (!mounted) return;
       _startTimer();
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      if (mounted) {
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Không thể gửi lại OTP',
+        );
+      }
       return;
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: AppColors.emeraldGreen,
-        content: Text('Đã gửi lại mã OTP 6 số mới qua tin nhắn SMS!'),
-      ),
+    AppAlerts.showSuccess(
+      context,
+      'Đã gửi lại mã OTP 6 số mới qua tin nhắn SMS!',
+      title: 'Đã gửi mã',
     );
   }
 
   void _requestVoiceOtp() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: AppColors.primary,
-        content: Text('Tổng đài tự động Sen Hồng đang gọi đến số điện thoại của bạn để đọc mã OTP...'),
-      ),
+    AppAlerts.showInfo(
+      context,
+      'Tổng đài tự động SenBank đang kết nối đến số điện thoại của quý khách để đọc mã xác thực...',
+      title: 'Xác thực qua cuộc gọi',
     );
   }
 

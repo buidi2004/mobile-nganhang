@@ -9,6 +9,8 @@ import 'package:sen_hong_bank/core/utils/currency_formatter.dart';
 import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/transaction_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
@@ -115,11 +117,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     } catch (error) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString().replaceAll('Exception: ', '')),
-            backgroundColor: AppColors.error,
-          ),
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Lỗi tải lịch sử',
         );
       }
     }
@@ -161,20 +162,18 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       final wallet = await WalletRemoteDataSource().getMyWallet();
       final bytes = await TransactionRemoteDataSource().exportTransactions(walletId: wallet.walletId, format: format);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.emeraldGreen,
-            content: Text('Đã tải sao kê $format (${bytes.length} bytes)'),
-          ),
+        AppAlerts.showSuccess(
+          context,
+          'Đã xuất thành công sao kê $format (${bytes.length} bytes)',
+          title: 'Xuất sao kê',
         );
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.error,
-            content: Text(error.toString().replaceAll('Exception: ', '')),
-          ),
+        AppAlerts.showError(
+          context,
+          extractErrorMessage(error),
+          title: 'Xuất sao kê thất bại',
         );
       }
     }

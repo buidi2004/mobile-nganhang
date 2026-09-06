@@ -6,6 +6,8 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 import 'package:sen_hong_bank/data/datasources/remote/funding_source_remote_datasource.dart';
+import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
   const PaymentMethodsScreen({super.key});
@@ -43,7 +45,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
         _loading = false;
       });
     } catch (error) {
-      if (mounted) setState(() { _error = error.toString(); _loading = false; });
+      if (mounted) setState(() { _error = extractErrorMessage(error); _loading = false; });
     }
   }
 
@@ -277,14 +279,21 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                                 if (ctx.mounted) Navigator.pop(ctx);
                                 await _loadMethods();
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                                    backgroundColor: AppColors.emeraldGreen,
-                                    content: Text('Liên kết thẻ quốc tế thành công!'),
-                                  ));
+                                  AppAlerts.showSuccess(
+                                    context,
+                                    'Liên kết thẻ quốc tế thành công!',
+                                    title: 'Thành công',
+                                  );
                                 }
                               } catch (error) {
                                 setModalState(() => isSubmitting = false);
-                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+                                if (mounted) {
+                                  AppAlerts.showError(
+                                    context,
+                                    extractErrorMessage(error),
+                                    title: 'Liên kết thẻ thất bại',
+                                  );
+                                }
                               }
                             },
                       child: isSubmitting
@@ -458,15 +467,20 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                     await FundingSourceRemoteDataSource().remove(item['id'].toString());
                     await _loadMethods();
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          backgroundColor: AppColors.emeraldGreen,
-                          content: Text('Đã hủy liên kết thẻ thành công'),
-                        ),
+                      AppAlerts.showSuccess(
+                        context,
+                        'Đã hủy liên kết thẻ thành công',
+                        title: 'Hủy liên kết',
                       );
                     }
                   } catch (error) {
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+                    if (mounted) {
+                      AppAlerts.showError(
+                        context,
+                        extractErrorMessage(error),
+                        title: 'Không thể hủy liên kết thẻ',
+                      );
+                    }
                   }
                 }
               },
