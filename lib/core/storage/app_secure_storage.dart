@@ -9,20 +9,22 @@ class AppSecureStorage {
     resetOnError: true,
   );
 
-  static const FlutterSecureStorage instance = FlutterSecureStorage(
-    aOptions: androidOptions,
+  static const IOSOptions iosOptions = IOSOptions(
+    accessibility: KeychainAccessibility.first_unlock,
+    synchronizable: false,
   );
 
-  /// Đọc dữ liệu an toàn từ SecureStorage. Nếu phát hiện lỗi giải mã (KeyStore mismatch / BadPaddingException),
-  /// tự động dọn dẹp khóa lỗi và trả về null thay vì ném Exception làm crash ứng dụng.
+  static const FlutterSecureStorage instance = FlutterSecureStorage(
+    aOptions: androidOptions,
+    iOptions: iosOptions,
+  );
+
+  /// Đọc dữ liệu an toàn từ SecureStorage. Không xóa khóa ngoài ý muốn khi hệ thống Keychain bận.
   static Future<String?> safeRead(FlutterSecureStorage storage, {required String key}) async {
     try {
       return await storage.read(key: key);
     } catch (e) {
-      debugPrint('[AppSecureStorage] Lỗi an toàn khi đọc khóa $key: $e. Tiến hành làm sạch khóa...');
-      try {
-        await storage.delete(key: key);
-      } catch (_) {}
+      debugPrint('[AppSecureStorage] Lỗi an toàn khi đọc khóa $key: $e');
       return null;
     }
   }

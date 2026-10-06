@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'smooth_page_transitions_builder.dart';
+
 // Shell & Main Tabs
 import '../screens/shell/main_tabs_screen.dart';
 import '../screens/home/home_screen.dart';
@@ -79,6 +81,7 @@ import '../screens/home/search_screen.dart';
 import '../screens/more/referral_screen.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/storage/app_secure_storage.dart';
+import '../../core/storage/app_session.dart';
 import '../screens/support/help_center_screen.dart';
 import '../screens/support/live_chat_screen.dart';
 import '../screens/splash/splash_screen.dart';
@@ -104,13 +107,15 @@ final GoRouter appRouter = GoRouter(
     final token = await AppSecureStorage.safeRead(AppSecureStorage.instance, key: AppConstants.keyAccessToken);
     final isLoggedIn = token != null && token.isNotEmpty;
 
-    // Chưa đăng nhập và cố vào tuyến đường được bảo vệ -> chuyển về Đăng nhập
-    if (!isLoggedIn && !isPublicRoute) {
+    // Chưa đăng nhập hoặc chưa mở khóa trong lần mở app này -> chuyển về Đăng nhập (FaceID / mật khẩu)
+    if ((!isLoggedIn || !AppSession.unlocked) && !isPublicRoute) {
       return '/auth/login';
     }
 
-    // Đã đăng nhập và cố vào màn hình đăng nhập hoặc đăng ký -> chuyển về Trang chủ
-    if (isLoggedIn && (path == '/auth/login' || path == '/auth/register')) {
+    // Đã đăng nhập + đã mở khóa mà vào màn hình đăng nhập hoặc đăng ký -> chuyển về Trang chủ
+    if (isLoggedIn &&
+        AppSession.unlocked &&
+        (path.startsWith('/auth/login') || path == '/auth/register')) {
       return '/';
     }
 
@@ -343,20 +348,23 @@ final GoRouter appRouter = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/transfer/result',
       name: 'transfer-result',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final recipient = state.uri.queryParameters['recipient'] ?? 'Ví Sen Hồng';
         final phoneNumber = state.uri.queryParameters['phoneNumber'];
         final amount = double.tryParse(state.uri.queryParameters['amount'] ?? '0') ?? 0;
         final note = state.uri.queryParameters['note'] ?? 'Chuyen tien';
         final transactionId = state.uri.queryParameters['transactionId'];
         final status = state.uri.queryParameters['status'] ?? 'SUCCESS';
-        return TransferResultScreen(
-          recipient: recipient,
-          phoneNumber: phoneNumber,
-          amount: amount,
-          note: note,
-          transactionId: transactionId,
-          status: status,
+        return AppPageTransitions.celebrationZoom(
+          key: state.pageKey,
+          child: TransferResultScreen(
+            recipient: recipient,
+            phoneNumber: phoneNumber,
+            amount: amount,
+            note: note,
+            transactionId: transactionId,
+            status: status,
+          ),
         );
       },
     ),
@@ -376,19 +384,28 @@ final GoRouter appRouter = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/scan-qr',
       name: 'scan-qr',
-      builder: (context, state) => const ScanQRScreen(),
+      pageBuilder: (context, state) => AppPageTransitions.modalSlideUp(
+        key: state.pageKey,
+        child: const ScanQRScreen(),
+      ),
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/qr-scanner',
       name: 'qr-scanner',
-      builder: (context, state) => const ScanQRScreen(),
+      pageBuilder: (context, state) => AppPageTransitions.modalSlideUp(
+        key: state.pageKey,
+        child: const ScanQRScreen(),
+      ),
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/my-qr',
       name: 'my-qr',
-      builder: (context, state) => const MyQRScreen(),
+      pageBuilder: (context, state) => AppPageTransitions.modalSlideUp(
+        key: state.pageKey,
+        child: const MyQRScreen(),
+      ),
     ),
 
     // ==========================================
@@ -682,7 +699,10 @@ final GoRouter appRouter = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/search',
       name: 'search',
-      builder: (context, state) => const SearchScreen(),
+      pageBuilder: (context, state) => AppPageTransitions.searchTransition(
+        key: state.pageKey,
+        child: const SearchScreen(),
+      ),
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,

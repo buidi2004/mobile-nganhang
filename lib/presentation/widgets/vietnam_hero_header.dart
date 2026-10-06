@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'user_avatar_widget.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_morph_icon.dart';
+import 'package:morphnext/morphnext.dart';
 
 /// Header Lễ hội SenBank:
 /// - Toàn bộ thông tin tài khoản (Lời chào, STK, Chip EMV, Số dư 12.580.000 VND) hiển thị trên banner
@@ -137,7 +139,10 @@ class VietnamHeroHeader extends StatelessWidget {
                                 ),
                                 child: IconButton(
                                   padding: EdgeInsets.zero,
-                                  onPressed: onNotificationTap,
+                                  onPressed: () {
+                                    HapticFeedback.selectionClick();
+                                    onNotificationTap?.call();
+                                  },
                                   icon: const Icon(
                                     CupertinoIcons.bell_fill,
                                     color: Colors.white,
@@ -173,7 +178,10 @@ class VietnamHeroHeader extends StatelessWidget {
                             ),
                             child: IconButton(
                               padding: EdgeInsets.zero,
-                              onPressed: onSearchTap,
+                              onPressed: () {
+                                HapticFeedback.selectionClick();
+                                onSearchTap?.call();
+                              },
                               icon: const Icon(
                                 CupertinoIcons.search,
                                 color: Colors.white,
@@ -331,62 +339,7 @@ class VietnamHeroHeader extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      InkWell(
-                        onTap: () {
-                          if (accountNumber.isEmpty) return;
-                          Clipboard.setData(ClipboardData(text: accountNumber));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                children: [
-                                  const Icon(CupertinoIcons.checkmark_alt_circle_fill, color: Colors.white),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Đã sao chép STK: $accountNumber',
-                                    style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                                  ),
-                                ],
-                              ),
-                              backgroundColor: const Color(0xFF0F3E6D),
-                              duration: const Duration(seconds: 2),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(6),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.25),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                              width: 0.8,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                accountNumber.isEmpty ? 'Chưa có số tài khoản' : accountNumber,
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.0,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              const Icon(
-                                CupertinoIcons.doc_on_doc,
-                                color: Colors.white70,
-                                size: 12,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      _CopyStkChip(accountNumber: accountNumber),
                       const Spacer(),
                       // Khả dụng + Icon Mắt
                       InkWell(
@@ -405,10 +358,11 @@ class VietnamHeroHeader extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              Icon(
-                                isHidden ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye_fill,
+                              AppMorphIcon(
+                                icon: isHidden ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                                 size: 16,
                                 color: Colors.white,
+                                spring: MorphSprings.snappy,
                               ),
                             ],
                           ),
@@ -498,4 +452,86 @@ class _EmvChipPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Nút sao chép STK với hiệu ứng vector morphicon (sao chép <-> checkmark)
+class _CopyStkChip extends StatefulWidget {
+  final String accountNumber;
+  const _CopyStkChip({required this.accountNumber});
+
+  @override
+  State<_CopyStkChip> createState() => _CopyStkChipState();
+}
+
+class _CopyStkChipState extends State<_CopyStkChip> {
+  bool _copied = false;
+
+  void _copy() {
+    if (widget.accountNumber.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: widget.accountNumber));
+    HapticFeedback.selectionClick();
+    setState(() => _copied = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              'Đã sao chép STK: ${widget.accountNumber}',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF0F3E6D),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (mounted) setState(() => _copied = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: _copy,
+      borderRadius: BorderRadius.circular(6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+        decoration: BoxDecoration(
+          color: _copied ? const Color(0xFF26E5DC).withOpacity(0.18) : Colors.black.withOpacity(0.25),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: _copied ? const Color(0xFF26E5DC).withOpacity(0.8) : Colors.white.withOpacity(0.2),
+            width: 0.8,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.accountNumber.isEmpty ? 'Chưa có số tài khoản' : widget.accountNumber,
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(width: 5),
+            AppMorphIcon(
+              icon: _copied ? Icons.check_circle_rounded : Icons.content_copy_rounded,
+              color: _copied ? const Color(0xFF26E5DC) : Colors.white70,
+              size: 13,
+              spring: MorphSprings.snappy,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

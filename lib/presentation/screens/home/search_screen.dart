@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
 import 'package:sen_hong_bank/core/theme/app_typography.dart';
 
@@ -15,8 +14,21 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   String _query = '';
   int _selectedFilterIdx = 0; // 0: Tat ca, 1: Dich vu, 2: Thu huong, 3: Huong dan
+
+  @override
+  void initState() {
+    super.initState();
+    // Chờ 480ms cho hiệu ứng chuyển màn hình diễn ra chậm rãi, mượt mà xong hẳn rồi mới mở bàn phím
+    // Đảm bảo không xảy ra bất kỳ hiện tượng khựng khung hình nào
+    Future.delayed(const Duration(milliseconds: 480), () {
+      if (mounted) {
+        _focusNode.requestFocus();
+      }
+    });
+  }
 
   final List<String> _recentSearches = [
     'Chuyển tiền Napas',
@@ -159,6 +171,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -199,7 +212,8 @@ class _SearchScreenState extends State<SearchScreen> {
         backgroundColor: Colors.transparent,
         title: TextField(
           controller: _searchCtrl,
-          autofocus: true,
+          focusNode: _focusNode,
+          autofocus: false,
           onChanged: (val) => setState(() => _query = val),
           style: const TextStyle(color: AppColors.textPrimaryLight, fontSize: 16),
           decoration: InputDecoration(
@@ -397,8 +411,19 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildFeatureItem(Map<String, dynamic> f) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: GlassCard(
-        quality: GlassQuality.minimal,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.88),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.7), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Material(
           type: MaterialType.transparency,
           child: ListTile(

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_morph_icon.dart';
+import 'package:morphnext/morphnext.dart';
 
 /// Thẻ tài khoản ngân hàng chuẩn quốc tế (SenBank Premier Card)
 /// Thiết kế chuẩn Digital Banking: Chi tiết tài khoản, số dư định dạng tài chính,
@@ -262,11 +264,15 @@ class BalanceCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           GestureDetector(
-                            onTap: onToggleVisibility,
-                            child: Icon(
-                              isHidden ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye_fill,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              onToggleVisibility();
+                            },
+                            child: AppMorphIcon(
+                              icon: isHidden ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                               size: 16,
                               color: Colors.white70,
+                              spring: MorphSprings.snappy,
                             ),
                           ),
                         ],

@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sen_hong_bank/core/constants/app_constants.dart';
 import 'package:sen_hong_bank/core/theme/app_colors.dart';
+import 'package:sen_hong_bank/core/storage/app_secure_storage.dart';
+import 'package:sen_hong_bank/core/storage/app_session.dart';
 
 /// Màn hình khởi động (Splash Screen) đa tầng đạt chuẩn điện ảnh 60 FPS cho SenBank.
 ///
@@ -86,13 +87,13 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _prefetchAuthStatus() async {
     try {
-      const storage = FlutterSecureStorage();
-      final token = await storage.read(key: AppConstants.keyAccessToken);
+      const storage = AppSecureStorage.instance;
+      final token = await AppSecureStorage.safeRead(storage, key: AppConstants.keyAccessToken);
       if (token != null && token.isNotEmpty) {
         if (_isJwtExpired(token)) {
           // Token cũ đã hết hạn, chủ động dọn dẹp và đánh dấu sessionExpired để hiển thị rõ thông báo yêu cầu đăng nhập
-          await storage.delete(key: AppConstants.keyAccessToken);
-          await storage.delete(key: AppConstants.keyRefreshToken);
+          await AppSecureStorage.safeDelete(storage, key: AppConstants.keyAccessToken);
+          await AppSecureStorage.safeDelete(storage, key: AppConstants.keyRefreshToken);
           _isLoggedIn = false;
           _sessionExpired = true;
         } else {
@@ -140,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
     HapticFeedback.lightImpact();
 
     try {
-      if (_isLoggedIn) {
+      if (_isLoggedIn && AppSession.unlocked) {
         context.go('/');
       } else {
         if (_sessionExpired) {

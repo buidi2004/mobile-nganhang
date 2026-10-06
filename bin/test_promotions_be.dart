@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 Future<void> main() async {
-  final baseUrl = 'http://203.145.46.200:8080/api/v1';
+  final baseUrl = 'http://180.93.120.246:8080/api/v1';
 
   print('--- Testing GET /promotions ---');
   try {

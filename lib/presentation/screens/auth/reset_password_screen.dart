@@ -9,6 +9,7 @@ import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/auth_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_morph_icon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -216,9 +217,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 style: const TextStyle(color: AppColors.textPrimaryLight, fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
                   prefixIcon: const Icon(CupertinoIcons.lock_fill, color: AppColors.primary),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscurePass ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye_fill, color: AppColors.textMutedLight),
-                    onPressed: () => setState(() => _obscurePass = !_obscurePass),
+                  suffixIcon: MorphEyeButton(
+                    isHidden: _obscurePass,
+                    color: AppColors.textMutedLight,
+                    size: 20,
+                    onTap: () => setState(() => _obscurePass = !_obscurePass),
                   ),
                   hintText: 'Tối thiểu 6 ký tự',
                   hintStyle: const TextStyle(color: AppColors.textMutedLight),
@@ -276,9 +279,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 style: const TextStyle(color: AppColors.textPrimaryLight, fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
                   prefixIcon: const Icon(CupertinoIcons.checkmark_shield_fill, color: AppColors.primary),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscureConfirmPass ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye_fill, color: AppColors.textMutedLight),
-                    onPressed: () => setState(() => _obscureConfirmPass = !_obscureConfirmPass),
+                  suffixIcon: MorphEyeButton(
+                    isHidden: _obscureConfirmPass,
+                    color: AppColors.textMutedLight,
+                    size: 20,
+                    onTap: () => setState(() => _obscureConfirmPass = !_obscureConfirmPass),
                   ),
                   hintText: 'Nhập lại mật khẩu mới',
                   hintStyle: const TextStyle(color: AppColors.textMutedLight),

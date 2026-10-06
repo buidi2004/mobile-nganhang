@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-const String baseUrl = 'http://203.145.46.200:8080/api/v1';
+const String baseUrl = 'http://180.93.120.246:8080/api/v1';
 
 void main() async {
   final client = HttpClient();

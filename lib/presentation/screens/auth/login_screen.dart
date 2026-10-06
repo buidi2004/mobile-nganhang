@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -15,7 +16,11 @@ import 'package:sen_hong_bank/core/constants/app_constants.dart';
 import 'package:sen_hong_bank/core/storage/app_secure_storage.dart';
 import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_morph_icon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sen_hong_bank/core/storage/app_session.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool sessionExpired;
@@ -40,139 +45,73 @@ class _LoginScreenState extends State<LoginScreen> {
   String _accountName = '';
   bool _isLoading = false;
   late bool _showExpiredBanner;
+  final LocalAuthentication _localAuth = LocalAuthentication();
+  bool _hasSavedBiometric = false;
+  bool _autoTriggered = false;
 
   @override
   void initState() {
     super.initState();
     _showExpiredBanner = widget.sessionExpired;
     _loadSavedUser();
-
-    if (widget.sessionExpired) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _showSessionExpiredDialog();
-        }
-      });
-    }
   }
 
-  void _showSessionExpiredDialog() {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogCtx) => PopScope(
-        canPop: true,
-        child: AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.warningBg,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.warningBorder),
-                ),
-                child: const Icon(
-                  CupertinoIcons.lock_shield_fill,
-                  color: AppColors.warningText,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Yêu Cầu Đăng Nhập',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17,
-                    color: AppColors.textPrimaryLight,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.expiredMessage ??
-                    'Phiên đăng nhập bảo mật (JWT) của Quý khách đã hết hạn. Vui lòng đăng nhập lại để tiếp tục sử dụng các dịch vụ tài chính.',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondaryLight,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.warningBg,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.warningBorder),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(CupertinoIcons.exclamationmark_triangle_fill, color: AppColors.warningText, size: 18),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Thông tin đăng nhập đã được ghi nhớ an toàn. Quý khách chỉ cần nhập lại Mật khẩu.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.warningText,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Đăng nhập ngay',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Future<void> _loadSavedUser() async {
     try {
       const storage = AppSecureStorage.instance;
       final savedPhone = await AppSecureStorage.safeRead(storage, key: AppConstants.keyPhoneNumber);
       final savedName = await AppSecureStorage.safeRead(storage, key: AppConstants.keyFullName);
-      if (savedPhone != null && savedPhone.isNotEmpty) {
-        _phoneController.text = savedPhone;
+      final savedPassword = await AppSecureStorage.safeRead(storage, key: 'biometric_saved_password');
+
+      // Backup an toàn từ SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final prefPhone = prefs.getString('bio_saved_phone');
+      final prefPwdEncoded = prefs.getString('bio_saved_pwd');
+      String? fallbackPassword;
+      if (prefPwdEncoded != null && prefPwdEncoded.isNotEmpty) {
+        try {
+          fallbackPassword = utf8.decode(base64Decode(prefPwdEncoded));
+        } catch (_) {}
+      }
+
+      final effectivePhone = (savedPhone != null && savedPhone.isNotEmpty) ? savedPhone : prefPhone;
+      final effectivePassword = (savedPassword != null && savedPassword.isNotEmpty) ? savedPassword : fallbackPassword;
+
+      final existingToken = await AppSecureStorage.safeRead(storage, key: AppConstants.keyAccessToken);
+      final hasToken = existingToken != null && existingToken.isNotEmpty;
+
+      bool hasBio = false;
+      try {
+        final canCheck = await _localAuth.canCheckBiometrics;
+        final isSupported = await _localAuth.isDeviceSupported();
+        final hasPassword = effectivePassword != null && effectivePassword.isNotEmpty;
+        hasBio = (canCheck || isSupported) && (hasToken || hasPassword);
+      } catch (_) {}
+
+      if (effectivePhone != null && effectivePhone.isNotEmpty) {
+        _phoneController.text = effectivePhone;
         if (mounted) {
           setState(() {
             _isMaskedUser = true;
             _accountName = (savedName != null && savedName.isNotEmpty) ? savedName : 'Quý khách';
+            _hasSavedBiometric = hasBio;
           });
+
+          // FaceID chỉ được quét khi người dùng chủ động bấm nút FaceID
         }
       }
     } catch (_) {}
+  }
+
+  void _scheduleAutoBiometric() {
+    if (_autoTriggered) return;
+    _autoTriggered = true;
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted && !_isLoading) {
+        _handleBiometricLogin(autoTrigger: true);
+      }
+    });
   }
 
   Future<void> _login() async {
@@ -200,13 +139,29 @@ class _LoginScreenState extends State<LoginScreen> {
         deviceId: 'flutter-${DateTime.now().millisecondsSinceEpoch}',
       );
 
-      // Lưu hoặc xóa thông tin ghi nhớ an toàn
+      // Lưu hoặc xóa thông tin ghi nhớ an toàn (Keychain + SharedPreferences backup)
       const storage = AppSecureStorage.instance;
+      final phone = _phoneController.text.trim();
+      final password = _passwordController.text;
       if (_rememberMe) {
-        await AppSecureStorage.safeWrite(storage, key: AppConstants.keyPhoneNumber, value: _phoneController.text.trim());
+        await AppSecureStorage.safeWrite(storage, key: AppConstants.keyPhoneNumber, value: phone);
+        await AppSecureStorage.safeWrite(storage, key: 'biometric_saved_password', value: password);
+        await AppSecureStorage.safeWrite(storage, key: AppConstants.keyBiometricEnabled, value: 'true');
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('bio_saved_phone', phone);
+        await prefs.setString('bio_saved_pwd', base64Encode(utf8.encode(password)));
+        await prefs.setBool('bio_enabled', true);
       } else {
         await AppSecureStorage.safeDelete(storage, key: AppConstants.keyPhoneNumber);
         await AppSecureStorage.safeDelete(storage, key: AppConstants.keyFullName);
+        await AppSecureStorage.safeDelete(storage, key: 'biometric_saved_password');
+        await AppSecureStorage.safeDelete(storage, key: AppConstants.keyBiometricEnabled);
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('bio_saved_phone');
+        await prefs.remove('bio_saved_pwd');
+        await prefs.remove('bio_enabled');
       }
 
       // Đồng bộ FCM token với backend khi đăng nhập thành công
@@ -230,6 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Xin cấp quyền hệ thống (Camera, Thông báo) sau khi người dùng đã đăng nhập thành công
       unawaited(PermissionService().requestAllAppPermissions());
 
+      AppSession.unlocked = true;
       if (mounted) context.go('/');
     } catch (error) {
       if (mounted) {
@@ -241,6 +197,100 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleBiometricLogin({bool autoTrigger = false, int retryCount = 0}) async {
+    if (_isLoading) return;
+    if (!autoTrigger) HapticFeedback.selectionClick();
+    try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isSupported = await _localAuth.isDeviceSupported();
+      if (!canCheck && !isSupported) {
+        if (!autoTrigger && mounted) {
+          AppAlerts.showWarning(
+            context,
+            'Thiết bị chưa cài đặt hoặc không hỗ trợ sinh trắc học FaceID / TouchID.',
+            title: 'Sinh trắc học',
+          );
+        }
+        return;
+      }
+
+      const storage = AppSecureStorage.instance;
+      final savedPhone = await AppSecureStorage.safeRead(storage, key: AppConstants.keyPhoneNumber);
+      String? savedPassword = await AppSecureStorage.safeRead(storage, key: 'biometric_saved_password');
+
+      // Backup an toàn từ SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final prefPhone = prefs.getString('bio_saved_phone');
+      final prefPwdEncoded = prefs.getString('bio_saved_pwd');
+      if ((savedPassword == null || savedPassword.isEmpty) && prefPwdEncoded != null && prefPwdEncoded.isNotEmpty) {
+        try {
+          savedPassword = utf8.decode(base64Decode(prefPwdEncoded));
+        } catch (_) {}
+      }
+
+      // Nếu trong storage chưa có mật khẩu lưu, nhưng người dùng đã nhập mật khẩu vào ô input
+      if ((savedPassword == null || savedPassword.isEmpty) && _passwordController.text.isNotEmpty) {
+        savedPassword = _passwordController.text;
+      }
+
+      final phone = (savedPhone != null && savedPhone.isNotEmpty) ? savedPhone : (prefPhone ?? _phoneController.text.trim());
+
+      final existingToken = await AppSecureStorage.safeRead(storage, key: AppConstants.keyAccessToken);
+      final hasToken = existingToken != null && existingToken.isNotEmpty;
+
+      if (!hasToken && (phone.isEmpty || savedPassword == null || savedPassword.isEmpty)) {
+        if (!autoTrigger && mounted) {
+          AppAlerts.showInfo(
+            context,
+            'Vui lòng nhập Mật khẩu một lần để kích hoạt và liên kết FaceID.',
+            title: 'Kích hoạt FaceID',
+          );
+        }
+        return;
+      }
+
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Xác thực FaceID để mở khóa ví Sen Hồng Bank',
+        options: const AuthenticationOptions(
+          biometricOnly: false,
+          stickyAuth: true,
+          useErrorDialogs: true,
+        ),
+      );
+
+      if (authenticated) {
+        if (!mounted) return;
+        HapticFeedback.heavyImpact();
+        if (hasToken) {
+          // Phiên còn hạn: FaceID khớp là mở khóa luôn, không cần mật khẩu
+          AppSession.unlocked = true;
+          context.go('/');
+          return;
+        }
+        _phoneController.text = phone;
+        _passwordController.text = savedPassword ?? '';
+        await _login();
+      }
+    } catch (e) {
+      debugPrint('[LoginScreen] Lỗi FaceID (autoTrigger: $autoTrigger, retry: $retryCount): $e');
+      if (autoTrigger && retryCount == 0 && mounted) {
+        Future.delayed(const Duration(milliseconds: 600), () {
+          if (mounted && !_isLoading) {
+            _handleBiometricLogin(autoTrigger: true, retryCount: 1);
+          }
+        });
+        return;
+      }
+      if (!autoTrigger && mounted) {
+        AppAlerts.showError(
+          context,
+          'Xác thực FaceID không thành công: $e',
+          title: 'Xác thực sinh trắc học',
+        );
+      }
     }
   }
 
@@ -513,9 +563,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: 'Mật khẩu',
                   labelStyle: const TextStyle(color: AppColors.textSecondaryLight),
                   prefixIcon: const Icon(CupertinoIcons.lock_fill, color: AppColors.primary),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye_fill, color: AppColors.textSecondaryLight),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  suffixIcon: MorphEyeButton(
+                    isHidden: _obscurePassword,
+                    color: AppColors.textSecondaryLight,
+                    size: 20,
+                    onTap: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   filled: true,
                   fillColor: AppColors.surfaceLight,
@@ -578,23 +630,45 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Biometric Option
               Center(
-                child: IconButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Vui lòng đăng nhập bằng Mật khẩu lần đầu để kích hoạt FaceID / Vân tay an toàn.'),
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                  },
-                  iconSize: 48,
-                  icon: const Icon(CupertinoIcons.viewfinder_circle_fill, color: AppColors.emeraldGreen),
-                  tooltip: 'Đăng nhập sinh trắc học FaceID / Vân tay',
+                child: InkWell(
+                  onTap: _handleBiometricLogin,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            CupertinoIcons.viewfinder,
+                            color: AppColors.primaryDark,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _hasSavedBiometric ? 'Đăng nhập nhanh bằng FaceID' : 'Đăng nhập bằng FaceID / Vân tay',
+                          style: AppTypography.bodySmall(color: AppColors.primaryDark).copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              Center(
-                child: Text('Đăng nhập nhanh bằng FaceID / Vân tay', style: AppTypography.bodySmall(color: AppColors.textSecondaryLight)),
               ),
               const SizedBox(height: 20),
 

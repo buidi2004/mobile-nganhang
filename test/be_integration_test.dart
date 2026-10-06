@@ -18,8 +18,8 @@ void main() {
     HttpOverrides.global = _RealHttpOverrides();
   });
 
-  const String baseUrl = 'http://203.145.46.200:8080/api/v1';
-  const String wsUrl = 'ws://203.145.46.200:8080/ws-native';
+  const String baseUrl = 'http://180.93.120.246:8080/api/v1';
+  const String wsUrl = 'ws://180.93.120.246:8080/ws-native';
 
   final client = HttpClient();
   tearDownAll(() => client.close());

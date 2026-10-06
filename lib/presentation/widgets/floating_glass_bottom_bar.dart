@@ -1,8 +1,8 @@
 import 'dart:ui';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:morphnext/morphnext.dart';
 
 /// Icon 4 ô vuông bo góc đa sắc XOAY NGHIÊNG CHÉO 3D kèm ngôi sao lấp lánh (Sparkle)
 /// Khớp chuẩn xác góc nghiêng ~22 độ và bề mặt nổi 3D trong ảnh mẫu tham chiếu
@@ -251,11 +251,11 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
   @override
   Size get preferredSize => const Size.fromHeight(88);
 
-  static const List<IconData> _tabIcons = [
-    CupertinoIcons.house_fill,
-    CupertinoIcons.clock_fill,
-    CupertinoIcons.gift_fill,
-    CupertinoIcons.person_fill,
+  static const List<({IconData active, IconData inactive})> _tabIcons = [
+    (active: Icons.home_rounded, inactive: Icons.home_outlined),
+    (active: Icons.receipt_long_rounded, inactive: Icons.receipt_long_outlined),
+    (active: Icons.card_giftcard_rounded, inactive: Icons.card_giftcard_outlined),
+    (active: Icons.person_rounded, inactive: Icons.person_outline_rounded),
   ];
 
   @override
@@ -293,7 +293,7 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
                               final isSelected = selectedIndex == index;
                               return Expanded(
                                 child: _buildTabItem(
-                                  icon: _tabIcons[index],
+                                  tab: _tabIcons[index],
                                   isSelected: isSelected,
                                   onTap: () => onTabSelected(index),
                                 ),
@@ -350,7 +350,7 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
   }
 
   Widget _buildTabItem({
-    required IconData icon,
+    required ({IconData active, IconData inactive}) tab,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -394,10 +394,11 @@ class FloatingGlassBottomBar extends StatelessWidget implements PreferredSizeWid
             scale: isSelected ? 1.14 : 1.0,
             duration: const Duration(milliseconds: 260),
             curve: Curves.easeOutBack,
-            child: Icon(
-              icon,
+            child: AnimatedMorphIcon(
+              icon: isSelected ? tab.active : tab.inactive,
               size: 22,
               color: isSelected ? Colors.white : const Color(0xFF2D3748),
+              spring: MorphSprings.snappy,
             ),
           ),
         ),

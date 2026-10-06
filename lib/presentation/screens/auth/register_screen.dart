@@ -9,6 +9,7 @@ import 'package:sen_hong_bank/data/datasources/auth_local_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/auth_remote_datasource.dart';
 import 'package:sen_hong_bank/data/datasources/remote/api_response.dart';
 import 'package:sen_hong_bank/presentation/widgets/app_alerts.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_morph_icon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -137,9 +138,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   labelText: 'Mật khẩu (tối thiểu 6 ký tự)',
                   labelStyle: const TextStyle(color: AppColors.textSecondaryLight),
                   prefixIcon: const Icon(CupertinoIcons.lock_fill, color: AppColors.primary),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscurePass ? CupertinoIcons.eye_slash_fill : CupertinoIcons.eye_fill, color: AppColors.textSecondaryLight),
-                    onPressed: () => setState(() => _obscurePass = !_obscurePass),
+                  suffixIcon: MorphEyeButton(
+                    isHidden: _obscurePass,
+                    color: AppColors.textSecondaryLight,
+                    size: 20,
+                    onTap: () => setState(() => _obscurePass = !_obscurePass),
                   ),
                   filled: true,
                   fillColor: AppColors.surfaceLight,

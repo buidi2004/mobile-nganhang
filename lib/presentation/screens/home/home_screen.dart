@@ -11,6 +11,8 @@ import 'package:sen_hong_bank/data/datasources/remote/transaction_remote_datasou
 import 'package:sen_hong_bank/data/datasources/remote/wallet_remote_datasource.dart';
 import 'package:sen_hong_bank/presentation/widgets/curved_promo_banner.dart';
 import 'package:sen_hong_bank/presentation/widgets/vietnam_hero_header.dart';
+import 'package:sen_hong_bank/presentation/widgets/app_morph_icon.dart';
+import 'package:flutter/services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,14 +30,14 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _recentTransactions = [];
 
   final List<Map<String, dynamic>> _quickServices = const [
-    {'icon': CupertinoIcons.paperplane_fill, 'label': 'Chuyển tiền', 'color': AppColors.primary, 'route': '/transfer'},
-    {'icon': CupertinoIcons.device_phone_portrait, 'label': 'Nạp ĐT', 'color': AppColors.emeraldGreen, 'route': '/bills/phone-recharge'},
-    {'icon': CupertinoIcons.doc_text_fill, 'label': 'Điện nước', 'color': AppColors.accentGold, 'route': '/bills'},
-    {'icon': CupertinoIcons.money_dollar_circle_fill, 'label': 'Tiết kiệm', 'color': AppColors.vividTeal, 'route': '/bills/savings'},
-    {'icon': CupertinoIcons.chart_bar_alt_fill, 'label': 'Vay nhanh', 'color': AppColors.softPurple, 'route': '/bills/quick-loan'},
-    {'icon': CupertinoIcons.ticket_fill, 'label': 'Vietlott', 'color': AppColors.bottomBarCyan, 'route': '/bills/lottery'},
-    {'icon': CupertinoIcons.creditcard_fill, 'label': 'Quản lý thẻ', 'color': AppColors.primaryDark, 'route': '/cards'},
-    {'icon': CupertinoIcons.ellipsis, 'label': 'Xem thêm', 'color': AppColors.textSecondaryLight, 'route': '/more'},
+    {'icon': Icons.send_outlined, 'label': 'Chuyển tiền', 'route': '/transfer'},
+    {'icon': Icons.phone_android_outlined, 'label': 'Nạp ĐT', 'route': '/bills/phone-recharge'},
+    {'icon': Icons.receipt_long_outlined, 'label': 'Điện nước', 'route': '/bills'},
+    {'icon': Icons.account_balance_outlined, 'label': 'Tiết kiệm', 'route': '/bills/savings'},
+    {'icon': Icons.trending_up_rounded, 'label': 'Vay nhanh', 'route': '/bills/quick-loan'},
+    {'icon': Icons.confirmation_number_outlined, 'label': 'Vietlott', 'route': '/bills/lottery'},
+    {'icon': Icons.credit_card_outlined, 'label': 'Quản lý thẻ', 'route': '/cards'},
+    {'icon': Icons.grid_view_outlined, 'label': 'Xem thêm', 'route': '/more'},
   ];
 
   @override
@@ -153,7 +155,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   (context, index) {
                     final item = _quickServices[index];
                     return InkWell(
-                      onTap: () => context.push(item['route']),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        context.push(item['route'] as String);
+                      },
                       borderRadius: BorderRadius.circular(16),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -164,25 +169,30 @@ class _HomeScreenState extends State<HomeScreen> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: (item['color'] as Color).withOpacity(0.2),
-                                width: 1,
-                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.04),
                                   blurRadius: 8,
-                                  offset: const Offset(0, 3),
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
-                            child: Icon(item['icon'], color: item['color'], size: 24),
+                            child: Icon(
+                              item['icon'] as IconData,
+                              color: AppColors.primary,
+                              size: 24,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            item['label'],
+                            item['label'] as String,
                             textAlign: TextAlign.center,
-                            style: AppTypography.bodySmall(color: AppColors.textPrimaryLight),
+                            style: AppTypography.bodySmall(color: AppColors.textPrimaryLight).copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -210,9 +220,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Giao dịch gần đây',
-                      style: AppTypography.titleLarge(color: AppColors.textPrimaryLight),
+                    Row(
+                      children: [
+                        Text(
+                          'Giao dịch gần đây',
+                          style: AppTypography.titleLarge(color: AppColors.textPrimaryLight),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _hideBalance = !_hideBalance);
+                          },
+                          child: AppMorphIcon(
+                            icon: _hideBalance ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                            size: 19,
+                            color: AppColors.textMutedLight,
+                          ),
+                        ),
+                      ],
                     ),
                     TextButton(
                       onPressed: () => context.push('/history'),
@@ -315,7 +341,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: AppTypography.bodySmall(color: AppColors.textSecondaryLight),
                               ),
                               trailing: Text(
-                                '${isPositive ? '+' : ''}${CurrencyFormatter.formatVND(amountNum)}',
+                                _hideBalance
+                                    ? '••••••••'
+                                    : '${isPositive ? '+' : ''}${CurrencyFormatter.formatVND(amountNum)}',
                                 style: AppTypography.titleMedium(
                                   color: isPositive ? AppColors.emeraldGreen : AppColors.textPrimaryLight,
                                 ),
