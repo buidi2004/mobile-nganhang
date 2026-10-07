@@ -227,13 +227,13 @@ Backend cung cấp **2 phương án** để FE lấy `walletId` ngay sau khi đ�
 ### 1.8. VPS Server & Android / iOS Dev Base URL
 
 #### Địa chỉ chính xác của Server VPS:
-* **Host IP VPS:** `203.145.46.200`
+* **Host IP VPS:** `180.93.120.246`
 * **Port Backend:** `8080`
-* **Base REST API URL (VPS):** `http://203.145.46.200:8080/api/v1`
-* **WebSocket STOMP URL (VPS):** `ws://203.145.46.200:8080/ws-native`
-* **Swagger API Docs (VPS):** `http://203.145.46.200:8080/swagger-ui/index.html`
+* **Base REST API URL (VPS):** `http://180.93.120.246:8080/api/v1`
+* **WebSocket STOMP URL (VPS):** `ws://180.93.120.246:8080/ws-native`
+* **Swagger API Docs (VPS):** `http://180.93.120.246:8080/swagger-ui/index.html`
 
-*(Đã kiểm tra kết nối trực tiếp đến VPS: Endpoint `http://203.145.46.200:8080/api/v1/legal/terms` phản hồi HTTP 200 OK ngay lập tức).*
+*(Đã kiểm tra kết nối trực tiếp đến VPS `180.93.120.246`: Auth Login, Query Wallets, Set PIN, Chuyển tiền Realtime phản hồi HTTP 200 OK ngay lập tức).*
 
 #### Các cấu hình Base URL dự phòng khi chạy Localhost:
 * **Android Emulator:** `http://10.0.2.2:8080/api/v1` (WS: `ws://10.0.2.2:8080/ws-native`)

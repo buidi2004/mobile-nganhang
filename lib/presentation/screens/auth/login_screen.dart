@@ -47,7 +47,6 @@ class _LoginScreenState extends State<LoginScreen> {
   late bool _showExpiredBanner;
   final LocalAuthentication _localAuth = LocalAuthentication();
   bool _hasSavedBiometric = false;
-  bool _autoTriggered = false;
 
   @override
   void initState() {
@@ -104,15 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (_) {}
   }
 
-  void _scheduleAutoBiometric() {
-    if (_autoTriggered) return;
-    _autoTriggered = true;
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (mounted && !_isLoading) {
-        _handleBiometricLogin(autoTrigger: true);
-      }
-    });
-  }
 
   Future<void> _login() async {
     final phone = _phoneController.text.trim();

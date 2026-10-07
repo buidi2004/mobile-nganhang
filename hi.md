@@ -1,13 +1,13 @@
 # API Integration Guide — Sen Hồng E-Wallet Backend
 
-> **VPS Base URL (Staging):** `http://203.145.46.200:8080`  
+> **VPS Base URL (Staging):** `http://180.93.120.246:8080`  
 > **Local Base URL (Dev):** `http://localhost:8080`  
 > **Auth:** `Authorization: Bearer {accessToken}` (JWT)  
 > **Idempotency:** Header `Idempotency-Key: {uuid}` cho mọi POST thay đổi số dư  
-> **WebSocket React Native (VPS):** `ws://203.145.46.200:8080/ws-native`  
-> **WebSocket Web/SockJS (VPS):** `ws://203.145.46.200:8080/ws`  
+> **WebSocket React Native / Flutter (VPS):** `ws://180.93.120.246:8080/ws-native`  
+> **WebSocket Web/SockJS (VPS):** `ws://180.93.120.246:8080/ws`  
 > **Subscribe Topic:** `/topic/users/{userId}/notifications`  
-> **RabbitMQ Management (VPS):** `http://203.145.46.200:15672` (guest/guest)  
+> **RabbitMQ Management (VPS):** `http://180.93.120.246:15672` (guest/guest)  
 
 ---
 
@@ -16,11 +16,11 @@
 ### 1. Thông số Kết nối Môi trường VPS
 | Mục | Địa chỉ / Cổng | Ghi chú |
 |---|---|---|
-| **Host IP** | `203.145.46.200` | IP máy chủ VPS |
-| **Backend API (REST)** | `http://203.145.46.200:8080` | Prefix API: `/api/v1/...` |
-| **WebSocket (Native)** | `ws://203.145.46.200:8080/ws-native` | React Native / Flutter (Raw STOMP) |
-| **WebSocket (Web)** | `ws://203.145.46.200:8080/ws` | Web browser / SockJS |
-| **RabbitMQ Dashboard** | `http://203.145.46.200:15672` | Tra cứu queue/message lúc test |
+| **Host IP** | `180.93.120.246` | IP máy chủ VPS |
+| **Backend API (REST)** | `http://180.93.120.246:8080` | Prefix API: `/api/v1/...` |
+| **WebSocket (Native)** | `ws://180.93.120.246:8080/ws-native` | React Native / Flutter (Raw STOMP) |
+| **WebSocket (Web)** | `ws://180.93.120.246:8080/ws` | Web browser / SockJS |
+| **RabbitMQ Dashboard** | `http://180.93.120.246:15672` | Tra cứu queue/message lúc test |
 
 ---
 
@@ -29,26 +29,26 @@
 #### 📱 React Native (Expo)
 Tạo hoặc cập nhật file `.env`:
 ```env
-EXPO_PUBLIC_API_URL=http://203.145.46.200:8080
-EXPO_PUBLIC_WS_URL=ws://203.145.46.200:8080/ws-native
+EXPO_PUBLIC_API_URL=http://180.93.120.246:8080
+EXPO_PUBLIC_WS_URL=ws://180.93.120.246:8080/ws-native
 ```
 
 #### 📱 React Native (CLI) / React Native Config
 ```env
-API_BASE_URL=http://203.145.46.200:8080
-WS_URL=ws://203.145.46.200:8080/ws-native
+API_BASE_URL=http://180.93.120.246:8080
+WS_URL=ws://180.93.120.246:8080/ws-native
 ```
 
 #### 💻 ReactJS (Vite)
 ```env
-VITE_API_BASE_URL=http://203.145.46.200:8080
-VITE_WS_URL=ws://203.145.46.200:8080/ws
+VITE_API_BASE_URL=http://180.93.120.246:8080
+VITE_WS_URL=ws://180.93.120.246:8080/ws
 ```
 
 #### 💻 Next.js
 ```env
-NEXT_PUBLIC_API_URL=http://203.145.46.200:8080
-NEXT_PUBLIC_WS_URL=ws://203.145.46.200:8080/ws
+NEXT_PUBLIC_API_URL=http://180.93.120.246:8080
+NEXT_PUBLIC_WS_URL=ws://180.93.120.246:8080/ws
 ```
 
 ---
@@ -86,7 +86,7 @@ Trong `ios/YourApp/Info.plist`, thêm exception cho IP VPS hoặc cho phép tả
 // src/services/api.ts
 import axios from 'axios';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://203.145.46.200:8080';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://180.93.120.246:8080';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -140,8 +140,8 @@ import { Client } from '@stomp/stompjs';
 
 export const initWebSocket = (userId: string, onNotification: (msg: any) => void) => {
   const client = new Client({
-    brokerURL: 'ws://203.145.46.200:8080/ws-native', // Dùng cho React Native
-    // Nếu là Web: webSocketFactory: () => new SockJS('http://203.145.46.200:8080/ws'),
+    brokerURL: 'ws://180.93.120.246:8080/ws-native', // Dùng cho React Native / Flutter
+    // Nếu là Web: webSocketFactory: () => new SockJS('http://180.93.120.246:8080/ws'),
     reconnectDelay: 5000,
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,
